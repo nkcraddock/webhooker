@@ -6,6 +6,9 @@ deps:
 debug:
 	go run cmd/server/server.go
 
-build:
+build: deps
 	mkdir -p ./build/
 	go build -o ./build/server cmd/server/server.go
+
+package: 
+	docker build -t nkcraddock/meathooks .
