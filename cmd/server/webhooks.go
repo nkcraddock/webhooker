@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
+
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/gorilla/mux"
 
@@ -13,18 +14,15 @@ import (
 )
 
 type Webhook struct {
-	CallbackURL string `json:"callback_url"`
-	Filter      string `json:"filter"`
+	Id          bson.ObjectId `json:"id" bson:"_id"`
+	CallbackURL string        `json:"callback_url" bson:"callback_url"`
+	Filter      string        `json:"filter" bson:"filter"`
 }
 
-var webhooks []Webhook
+var repo *Repo
 
 func init() {
-	webhooks = []Webhook{
-		Webhook{CallbackURL: "http://localhost:3002/callback", Filter: "*"},
-		Webhook{CallbackURL: "http://localhost:3002/callback2", Filter: "*"},
-		Webhook{CallbackURL: "http://localhost:3002/callback3", Filter: "*"},
-	}
+	repo = ConnectRepo("172.17.0.3", "meathooks")
 }
 
 func WebhooksPost(w http.ResponseWriter, req *http.Request) {
@@ -35,15 +33,20 @@ func WebhooksPost(w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Infof("POST /webhooks - %s", hook)
-	ix := len(webhooks)
-	webhooks = append(webhooks, hook)
-	uri := fmt.Sprintf("/webhooks/%d", ix)
+	err = repo.AddWebhook(&hook)
+
+	if failOnError(w, err) {
+		return
+	}
+
+	uri := fmt.Sprintf("/webhooks/%s", hook.Id)
 	w.Header().Set("Location", uri)
 	w.WriteHeader(201)
 }
 
 func WebhooksList(w http.ResponseWriter, req *http.Request) {
-	b, err := json.Marshal(webhooks)
+	hooks := repo.GetWebhooks()
+	b, err := json.Marshal(hooks)
 
 	if failOnError(w, err) {
 		return
@@ -55,14 +58,12 @@ func WebhooksList(w http.ResponseWriter, req *http.Request) {
 
 func WebhooksGet(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
-	id, err := strconv.Atoi(vars["id"])
-	if failOnError(w, err) {
-		return
-	}
-	log.Infof("GET /webhooks/%d", id)
+	id := vars["id"]
+	log.Infof("GET /webhooks/%s", id)
 
+	webhook := repo.GetWebhook(id)
 	enc := json.NewEncoder(w)
-	err = enc.Encode(webhooks[id])
+	err := enc.Encode(webhook)
 
 	if failOnError(w, err) {
 		return
