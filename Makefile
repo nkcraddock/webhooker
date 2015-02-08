@@ -1,10 +1,12 @@
 default: deps debug
 
 deps:
+	go get github.com/gorilla/mux
 	go get github.com/sirupsen/logrus
+	go get gopkg.in/mgo.v2
 
 debug:
-	go run cmd/server/server.go
+	go run cmd/server/*.go
 
 build: deps
 	mkdir -p ./build/
