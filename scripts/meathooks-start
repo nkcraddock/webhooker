@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /opt/meathooks/server -addr ":80"
+exec /opt/meathooks/server -h ":80"
