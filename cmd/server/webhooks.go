@@ -22,7 +22,13 @@ type Webhook struct {
 var repo *Repo
 
 func init() {
-	repo = ConnectRepo(config.MongoUrl, config.MongoDb)
+	var err error
+	repo, err = ConnectRepo(config.MongoUrl, config.MongoDb)
+
+	if err != nil {
+		log.Fatalf("Failed to connect to mongo: %s", err.Error())
+		panic("Failed to connect to mongo")
+	}
 }
 
 func WebhooksPost(w http.ResponseWriter, req *http.Request) {

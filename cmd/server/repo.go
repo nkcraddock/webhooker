@@ -11,8 +11,25 @@ type Repo struct {
 	mongo    *mgo.Session
 }
 
-func ConnectRepo(url string, database string) *Repo {
-	return &Repo{database: database, url: url}
+func ConnectRepo(url string, database string) (*Repo, error) {
+	repo := &Repo{database: database, url: url}
+
+	// Set up the webhooks index
+	err := repo.withCollection("webhooks", func(c *mgo.Collection) (err error) {
+		err = c.EnsureIndex(mgo.Index{
+			Key:        []string{"CallbackURL"},
+			Unique:     true,
+			DropDups:   true,
+			Background: true,
+		})
+		return
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return repo, nil
 }
 
 func (r *Repo) AddWebhook(wh *Webhook) error {
