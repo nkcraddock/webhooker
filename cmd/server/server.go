@@ -11,20 +11,26 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var config Config
+
 func init() {
-	log.SetOutput(os.Stderr)
-	log.SetLevel(log.DebugLevel)
+	config = LoadConfig()
+	log.SetOutput(os.Stdout)
+	log.ParseLevel(config.LogLevel)
+
+	log.Infof("Initializing with config %s", config)
 }
 
 func main() {
 	addr := flag.String("addr", ":3001", "the address to listen on")
+
 	flag.Parse()
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", home)
 	r.HandleFunc("/webhooks", WebhooksPost).Methods("POST")
-	r.HandleFunc("/webhooks/{id}", WebhooksGet).Methods("GET")
+	r.HandleFunc("/webhooks/{id:[0-9a-fA-F]{24}}", WebhooksGet).Methods("GET")
 	r.HandleFunc("/webhooks", WebhooksList).Methods("GET")
 
 	http.Handle("/", r)

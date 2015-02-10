@@ -22,7 +22,7 @@ type Webhook struct {
 var repo *Repo
 
 func init() {
-	repo = ConnectRepo("172.17.0.3", "meathooks")
+	repo = ConnectRepo(config.MongoUrl, config.MongoDb)
 }
 
 func WebhooksPost(w http.ResponseWriter, req *http.Request) {
@@ -39,7 +39,7 @@ func WebhooksPost(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	uri := fmt.Sprintf("/webhooks/%s", hook.Id)
+	uri := fmt.Sprintf("/webhooks/%s", hook.Id.Hex())
 	w.Header().Set("Location", uri)
 	w.WriteHeader(201)
 }
@@ -62,6 +62,12 @@ func WebhooksGet(w http.ResponseWriter, req *http.Request) {
 	log.Infof("GET /webhooks/%s", id)
 
 	webhook := repo.GetWebhook(id)
+
+	if len(webhook.Id) == 0 {
+		http.NotFound(w, req)
+		return
+	}
+
 	enc := json.NewEncoder(w)
 	err := enc.Encode(webhook)
 

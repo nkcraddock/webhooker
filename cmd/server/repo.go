@@ -38,17 +38,12 @@ func (r *Repo) GetWebhooks() (webhooks []Webhook) {
 }
 
 func (r *Repo) GetWebhook(id string) (webhook Webhook) {
-
-	err := r.withCollection("webhooks", func(c *mgo.Collection) (err error) {
+	r.withCollection("webhooks", func(c *mgo.Collection) (err error) {
 		err = c.FindId(bson.ObjectIdHex(id)).One(&webhook)
 		return err
 	})
 
-	if err != nil {
-		panic(err)
-	}
-
-	return webhook
+	return
 }
 
 func (r *Repo) getSession() *mgo.Session {
