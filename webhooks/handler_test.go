@@ -6,12 +6,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/gorilla/mux"
 )
 
-func TestGet(t *testing.T) {
+func TestList(t *testing.T) {
 	router := mux.NewRouter()
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest("GET", "/webhooks", nil)
@@ -28,14 +29,50 @@ func TestGet(t *testing.T) {
 
 	router.ServeHTTP(w, r)
 
-	response := parseResponse(w.Body)
+	response := parseResponseSet(w.Body)
 
 	if len(response) != 1 {
 		t.Errorf("Got the wrong number of results. Got %d, expected 1", len(response))
 	}
 }
 
-func parseResponse(r io.Reader) []Webhook {
+func TestGetById(t *testing.T) {
+	router := mux.NewRouter()
+	w := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "/webhooks/54dac2b3c7f7324b40000001", nil)
+
+	hook := NewWebhook("54dac2b3c7f7324b40000001", "localhost/callback", "*")
+
+	store := &fakeStore{
+		getById: func(id string) Webhook {
+			return hook
+		},
+	}
+
+	RegisterHandler(router, store)
+
+	router.ServeHTTP(w, r)
+
+	response := parseResponse(w.Body)
+
+	if !reflect.DeepEqual(response, hook) {
+		t.Errorf("Got the wrong response %e, expected %e", response, hook)
+	}
+
+	if w.Code != 200 {
+		t.Errorf("Got the wrong response code %d expected 200", w.Code)
+	}
+
+}
+
+func parseResponse(r io.Reader) Webhook {
+	var hook Webhook
+	b, _ := ioutil.ReadAll(r)
+	json.Unmarshal(b, &hook)
+	return hook
+}
+
+func parseResponseSet(r io.Reader) []Webhook {
 	var hooks []Webhook
 	b, _ := ioutil.ReadAll(r)
 	json.Unmarshal(b, &hooks)
