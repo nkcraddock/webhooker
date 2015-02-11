@@ -32,9 +32,9 @@ VOLUME ["/data/db", "/data/log", "/data/mnesia"]
 WORKDIR /data
 
 ADD build/server /opt/meathooks/server
-ADD scripts/meathooks-start /etc/service/meathooks-server/run
-ADD scripts/rabbitmq-start /etc/service/rabbitmq/run
-ADD scripts/mongodb-start /etc/service/mongodb/run
+ADD depl/scripts/meathooks-start /etc/service/meathooks-server/run
+ADD depl/scripts/rabbitmq-start /etc/service/rabbitmq/run
+ADD depl/scripts/mongodb-start /etc/service/mongodb/run
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

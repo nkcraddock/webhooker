@@ -1,5 +1,7 @@
 default: deps debug
 
+clean: 
+	rm -rf build
 
 deps:
 	go get github.com/gorilla/mux
@@ -8,7 +10,7 @@ deps:
 debug: deps
 	go run cmd/server/*.go
 
-build: deps
+build: deps clean
 	mkdir -p ./build/
 	go build -o ./build/server cmd/server/*.go  
 
@@ -21,7 +23,6 @@ reset-mongo:
 	-docker stop meathook-mongo && docker rm meathook-mongo
 	docker run -d -p 27017:27017 -p 28017:28017 \
 		--name meathook-mongo dockerfile/mongodb
-
 
 package: 
 	docker build -t nkcraddock/meathooks .
