@@ -4,7 +4,7 @@ import (
 	"flag"
 )
 
-type Config struct {
+type config struct {
 	HostUrl   string
 	MongoUrl  string
 	MongoDb   string
@@ -12,7 +12,7 @@ type Config struct {
 	LogLevel  string
 }
 
-func LoadConfig() Config {
+func loadConfig() config {
 	host := flag.String("h", ":3001", "The host url to listen on")
 	mongo := flag.String("m", "localhost", "The URL of the mongo server")
 	rabbit := flag.String("r", "localhost", "The URL of the rabbit server")
@@ -21,7 +21,7 @@ func LoadConfig() Config {
 
 	flag.Parse()
 
-	return Config{
+	return config{
 		HostUrl:   *host,
 		MongoUrl:  *mongo,
 		MongoDb:   *database,
