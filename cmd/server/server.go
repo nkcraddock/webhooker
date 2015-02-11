@@ -34,11 +34,7 @@ func init_mongo(url string, database string) {
 func main() {
 	r := mux.NewRouter()
 
-	wh := webhooks.NewHttpHandler(hooks)
-
-	r.HandleFunc("/webhooks", wh.Post).Methods("POST")
-	r.HandleFunc("/webhooks/{id:[0-9a-fA-F]{24}}", wh.Get).Methods("GET")
-	r.HandleFunc("/webhooks", wh.List).Methods("GET")
+	webhooks.RegisterHandler(r, hooks)
 
 	http.Handle("/", r)
 	http.ListenAndServe(cfg.HostUrl, nil)

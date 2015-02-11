@@ -14,6 +14,9 @@ build: deps clean
 	mkdir -p ./build/
 	go build -o ./build/server cmd/server/*.go  
 
+test: deps
+	go test -v ./...
+
 reset-rabbit:
 	-docker stop meathook-rabbit && docker rm meathook-rabbit
 	docker run -d -p 5672:5672 -p 15672:15672 \

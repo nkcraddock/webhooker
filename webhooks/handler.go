@@ -12,10 +12,14 @@ type HttpHandler struct {
 	hooks Store
 }
 
-func NewHttpHandler(store Store) *HttpHandler {
-	return &HttpHandler{
-		hooks: store,
-	}
+func RegisterHandler(r *mux.Router, store Store) *HttpHandler {
+	handler := HttpHandler{hooks: store}
+
+	r.HandleFunc("/webhooks", handler.Post).Methods("POST")
+	r.HandleFunc("/webhooks/{id:[0-9a-fA-F]{24}}", handler.Get).Methods("GET")
+	r.HandleFunc("/webhooks", handler.List).Methods("GET")
+
+	return &handler
 }
 
 func (h *HttpHandler) Post(w http.ResponseWriter, req *http.Request) {
