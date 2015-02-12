@@ -22,6 +22,7 @@ func RegisterHandler(r *mux.Router, store Store) *HttpHandler {
 	return &handler
 }
 
+// Post handles POST /webhooks
 func (h *HttpHandler) Post(w http.ResponseWriter, req *http.Request) {
 	hook, err := ParseWebhookFromRequest(req)
 

@@ -2,7 +2,11 @@ package main
 
 import (
 	"net/http"
+	"os"
 
+	"github.com/gorilla/handlers"
+
+	"github.com/justinas/alice"
 	"github.com/nkcraddock/meathooks/db"
 	"github.com/nkcraddock/meathooks/webhooks"
 
@@ -32,10 +36,12 @@ func init_mongo(url string, database string) {
 }
 
 func main() {
-	r := mux.NewRouter()
+	router := mux.NewRouter()
+	webhooks.RegisterHandler(router, hooks)
+	chain := alice.New(loggerHandler).Then(router)
+	http.ListenAndServe(cfg.HostUrl, chain)
+}
 
-	webhooks.RegisterHandler(r, hooks)
-
-	http.Handle("/", r)
-	http.ListenAndServe(cfg.HostUrl, nil)
+func loggerHandler(next http.Handler) http.Handler {
+	return handlers.LoggingHandler(os.Stdout, next)
 }
