@@ -10,6 +10,7 @@ type Store interface {
 	Add(*Webhook) error
 	All() []Webhook
 	GetById(string) Webhook
+	Delete(string) error
 }
 
 type mgoStore struct {
@@ -68,4 +69,13 @@ func (s *mgoStore) GetById(id string) (webhook Webhook) {
 	})
 
 	return
+}
+
+func (s *mgoStore) Delete(id string) error {
+	err := s.do(func(c *mgo.Collection) (err error) {
+		err = c.RemoveId(bson.ObjectIdHex(id))
+		return err
+	})
+
+	return err
 }

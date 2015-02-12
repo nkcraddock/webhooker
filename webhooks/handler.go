@@ -6,16 +6,22 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/nkcraddock/rabbit-hole"
 )
 
 type HttpHandler struct {
-	hooks Store
+	hooks  Store
+	rabbit *rabbitFarm
 }
 
-func RegisterHandler(r *mux.Router, store Store) *HttpHandler {
-	handler := HttpHandler{hooks: store}
+func RegisterHandler(r *mux.Router, store Store, rabbit *rabbithole.Client) *HttpHandler {
+	handler := HttpHandler{
+		hooks:  store,
+		rabbit: newRabbitFarm(rabbit),
+	}
 
 	r.HandleFunc("/webhooks", handler.Post).Methods("POST")
+	r.HandleFunc("/webhooks/{id:[0-9a-fA-F]{24}}", handler.Delete).Methods("DELETE")
 	r.HandleFunc("/webhooks/{id:[0-9a-fA-F]{24}}", handler.Get).Methods("GET")
 	r.HandleFunc("/webhooks", handler.List).Methods("GET")
 
@@ -35,6 +41,8 @@ func (h *HttpHandler) Post(w http.ResponseWriter, req *http.Request) {
 	if failOnError(w, err) {
 		return
 	}
+
+	h.rabbit.SaveUrlQueue(hook.Id.Hex())
 
 	uri := fmt.Sprintf("/webhooks/%s", hook.Id.Hex())
 	w.Header().Set("Location", uri)
@@ -70,6 +78,17 @@ func (h *HttpHandler) Get(w http.ResponseWriter, req *http.Request) {
 	if failOnError(w, err) {
 		return
 	}
+}
+
+func (h *HttpHandler) Delete(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	err := h.hooks.Delete(id)
+
+	if failOnError(w, err) {
+		return
+	}
 
 	w.WriteHeader(200)
 }
@@ -79,8 +98,8 @@ func failOnError(w http.ResponseWriter, err error) bool {
 		return false
 	}
 
-	fmt.Fprintf(w, "An error occurred: %s", err.Error())
-	w.WriteHeader(500)
+	msg := fmt.Sprintf("An error occurred: %s", err.Error())
+	http.Error(w, msg, 500)
 	return true
 }
 
