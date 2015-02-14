@@ -90,6 +90,8 @@ func (h *HttpHandler) Delete(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	h.rabbit.DeleteUrlQueue(id)
+
 	w.WriteHeader(200)
 }
 

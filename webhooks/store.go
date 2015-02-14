@@ -31,7 +31,7 @@ func (s *mgoStore) registerSchema() error {
 	// Set up the webhooks index
 	return s.do(func(c *mgo.Collection) (err error) {
 		err = c.EnsureIndex(mgo.Index{
-			Key:        []string{"CallbackURL"},
+			Key:        []string{"CallbackURL", "Filter"},
 			Unique:     true,
 			DropDups:   true,
 			Background: true,
