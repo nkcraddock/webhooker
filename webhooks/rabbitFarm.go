@@ -22,6 +22,11 @@ func (r *rabbitFarm) SaveUrlQueue(id string) {
 		AutoDelete: true,
 	}
 
+	bind := rabbithole.BindingInfo{
+		RoutingKey: "#",
+	}
+
 	r.conn.DeclareQueue("/", id, queue)
 	r.conn.DeclareExchange("/", id, exch)
+	r.conn.DeclareBinding("/", id, "q", id, bind)
 }
