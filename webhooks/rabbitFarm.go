@@ -1,11 +1,6 @@
 package webhooks
 
-import (
-	"crypto/sha1"
-	"encoding/base64"
-
-	"github.com/nkcraddock/rabbit-hole"
-)
+import "github.com/michaelklishin/rabbit-hole"
 
 const vhost = "/"
 
@@ -35,31 +30,13 @@ func (r *rabbitFarm) SaveUrlQueue(id string) {
 		Destination:     id,
 		DestinationType: "q",
 		RoutingKey:      "#",
-		PropertiesKey:   PropertiesKey(id, "#"),
 	}
-
 	r.conn.DeclareQueue(vhost, id, queue)
 	r.conn.DeclareExchange(vhost, id, exch)
-	r.conn.DeclareBinding(vhost, bind.PropertiesKey, bind)
+	r.conn.DeclareBinding(vhost, bind)
 }
 
 func (r *rabbitFarm) DeleteUrlQueue(id string) {
-	bind := rabbithole.BindingInfo{
-		Source:          id,
-		Vhost:           vhost,
-		Destination:     id,
-		DestinationType: "q",
-		RoutingKey:      "#",
-		PropertiesKey:   PropertiesKey(id, "#"),
-	}
-
-	r.conn.DeleteBinding(vhost, bind.PropertiesKey, bind)
 	r.conn.DeleteQueue(vhost, id)
 	r.conn.DeleteExchange(vhost, id)
-}
-
-func PropertiesKey(id, filter string) string {
-	sha := sha1.New()
-	sha.Write([]byte(filter))
-	return base64.URLEncoding.EncodeToString(sha.Sum(nil))
 }

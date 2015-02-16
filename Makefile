@@ -5,8 +5,10 @@ clean:
 
 deps:
 	go get github.com/gorilla/mux
+	go get github.com/gorilla/handlers
 	go get gopkg.in/mgo.v2
 	go get github.com/justinas/alice
+	go get github.com/michaelklishin/rabbit-hole
 
 debug: deps
 	go run cmd/server/*.go

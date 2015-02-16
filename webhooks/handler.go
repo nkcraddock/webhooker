@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/nkcraddock/rabbit-hole"
+	"github.com/michaelklishin/rabbit-hole"
 )
 
 type HttpHandler struct {

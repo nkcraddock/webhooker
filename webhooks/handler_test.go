@@ -25,7 +25,7 @@ func TestList(t *testing.T) {
 		},
 	}
 
-	RegisterHandler(router, store)
+	RegisterHandler(router, store, nil)
 
 	router.ServeHTTP(w, r)
 
@@ -49,7 +49,7 @@ func TestGetById(t *testing.T) {
 		},
 	}
 
-	RegisterHandler(router, store)
+	RegisterHandler(router, store, nil)
 
 	router.ServeHTTP(w, r)
 
@@ -83,6 +83,7 @@ type fakeStore struct {
 	add     func(*Webhook) error
 	all     func() []Webhook
 	getById func(string) Webhook
+	del     func(string) error
 }
 
 func (f *fakeStore) Add(wh *Webhook) error {
@@ -95,4 +96,8 @@ func (f *fakeStore) All() []Webhook {
 
 func (f *fakeStore) GetById(id string) Webhook {
 	return f.getById(id)
+}
+
+func (f *fakeStore) Delete(id string) error {
+	return f.del(id)
 }

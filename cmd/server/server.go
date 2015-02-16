@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/nkcraddock/rabbit-hole"
+	"github.com/michaelklishin/rabbit-hole"
 
 	"github.com/gorilla/handlers"
 
