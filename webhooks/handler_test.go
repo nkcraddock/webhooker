@@ -9,11 +9,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gorilla/mux"
+	"github.com/emicklei/go-restful"
 )
 
 func TestList(t *testing.T) {
-	router := mux.NewRouter()
+	container := restful.NewContainer()
+
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest("GET", "/webhooks", nil)
 
@@ -25,9 +26,8 @@ func TestList(t *testing.T) {
 		},
 	}
 
-	RegisterHandler(router, store, nil)
-
-	router.ServeHTTP(w, r)
+	Register(container, store, nil)
+	container.ServeHTTP(w, r)
 
 	response := parseResponseSet(w.Body)
 
@@ -37,7 +37,7 @@ func TestList(t *testing.T) {
 }
 
 func TestGetById(t *testing.T) {
-	router := mux.NewRouter()
+	container := restful.NewContainer()
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest("GET", "/webhooks/54dac2b3c7f7324b40000001", nil)
 
@@ -49,9 +49,8 @@ func TestGetById(t *testing.T) {
 		},
 	}
 
-	RegisterHandler(router, store, nil)
-
-	router.ServeHTTP(w, r)
+	Register(container, store, nil)
+	container.ServeHTTP(w, r)
 
 	response := parseResponse(w.Body)
 

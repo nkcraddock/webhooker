@@ -4,15 +4,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/michaelklishin/rabbit-hole"
+	"github.com/emicklei/go-restful"
 
 	"github.com/gorilla/handlers"
+	"github.com/michaelklishin/rabbit-hole"
 
-	"github.com/justinas/alice"
 	"github.com/nkcraddock/meathooks/db"
 	"github.com/nkcraddock/meathooks/webhooks"
-
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -49,10 +47,15 @@ func init_rabbit(uri string, username string, password string) {
 }
 
 func main() {
-	router := mux.NewRouter()
-	webhooks.RegisterHandler(router, hooks, rabbit)
-	chain := alice.New(loggerHandler).Then(router)
-	http.ListenAndServe(cfg.HostUrl, chain)
+	container := restful.NewContainer()
+	container.Router(restful.CurlyRouter{})
+
+	webhooks.Register(container, hooks, rabbit)
+
+	server := &http.Server{Addr: cfg.HostUrl, Handler: container}
+	server.ListenAndServe()
+	// 	chain := alice.New(loggerHandler).Then(router)
+	//	http.ListenAndServe(cfg.HostUrl, chain)
 }
 
 func loggerHandler(next http.Handler) http.Handler {

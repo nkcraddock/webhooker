@@ -4,11 +4,10 @@ clean:
 	rm -rf build
 
 deps:
-	go get github.com/gorilla/mux
-	go get github.com/gorilla/handlers
 	go get gopkg.in/mgo.v2
 	go get github.com/justinas/alice
 	go get github.com/michaelklishin/rabbit-hole
+	go get github.com/emicklei/go-restful
 
 debug: deps
 	go run cmd/server/*.go

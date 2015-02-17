@@ -1,112 +1,97 @@
 package webhooks
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/emicklei/go-restful"
+
 	"github.com/michaelklishin/rabbit-hole"
 )
 
-type HttpHandler struct {
+type WebhooksResource struct {
 	hooks  Store
 	rabbit *rabbitFarm
 }
 
-func RegisterHandler(r *mux.Router, store Store, rabbit *rabbithole.Client) *HttpHandler {
-	handler := HttpHandler{
+func Register(c *restful.Container, store Store, rabbit *rabbithole.Client) {
+	handler := WebhooksResource{
 		hooks:  store,
 		rabbit: newRabbitFarm(rabbit),
 	}
 
-	r.HandleFunc("/webhooks", handler.Post).Methods("POST")
-	r.HandleFunc("/webhooks/{id:[0-9a-fA-F]{24}}", handler.Delete).Methods("DELETE")
-	r.HandleFunc("/webhooks/{id:[0-9a-fA-F]{24}}", handler.Get).Methods("GET")
-	r.HandleFunc("/webhooks", handler.List).Methods("GET")
+	ws := new(restful.WebService)
+	ws.
+		Path("/webhooks").
+		Consumes(restful.MIME_JSON).
+		Produces(restful.MIME_JSON)
 
-	return &handler
+	ws.Route(ws.GET("/").To(handler.List))
+	ws.Route(ws.GET("/{id:[0-9a-fA-F]{24}}").To(handler.Get))
+	ws.Route(ws.POST("/").To(handler.Post))
+	ws.Route(ws.DELETE("/{id:[0-9a-fA-F]{24}}").To(handler.Delete))
+
+	c.Add(ws)
 }
 
-// Post handles POST /webhooks
-func (h *HttpHandler) Post(w http.ResponseWriter, req *http.Request) {
-	hook, err := ParseWebhookFromRequest(req)
+// POST /webhooks
+func (h *WebhooksResource) Post(req *restful.Request, res *restful.Response) {
+	hook := new(Webhook)
+	err := req.ReadEntity(&hook)
 
-	if failOnError(w, err) {
+	if failOnError(res, err) {
 		return
 	}
 
-	err = h.hooks.Add(&hook)
+	err = h.hooks.Add(hook)
 
-	if failOnError(w, err) {
+	if failOnError(res, err) {
 		return
 	}
 
 	h.rabbit.SaveUrlQueue(hook.Id.Hex())
 
 	uri := fmt.Sprintf("/webhooks/%s", hook.Id.Hex())
-	w.Header().Set("Location", uri)
-	w.WriteHeader(201)
+	res.AddHeader("Location", uri)
+	res.WriteHeader(http.StatusCreated)
 }
 
-func (h *HttpHandler) List(w http.ResponseWriter, req *http.Request) {
+func (h *WebhooksResource) List(req *restful.Request, res *restful.Response) {
 	hooks := h.hooks.All()
-	b, err := json.Marshal(hooks)
-
-	if failOnError(w, err) {
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(b)
+	res.WriteEntity(hooks)
 }
 
-func (h *HttpHandler) Get(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	id := vars["id"]
-
+func (h *WebhooksResource) Get(req *restful.Request, res *restful.Response) {
+	id := req.PathParameter("id")
 	hook := h.hooks.GetById(id)
 
 	if len(hook.Id) == 0 {
-		http.NotFound(w, req)
+		res.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	enc := json.NewEncoder(w)
-	err := enc.Encode(hook)
-
-	if failOnError(w, err) {
-		return
-	}
+	res.WriteEntity(hook)
 }
 
-func (h *HttpHandler) Delete(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	id := vars["id"]
-
+func (h *WebhooksResource) Delete(req *restful.Request, res *restful.Response) {
+	id := req.PathParameter("id")
 	err := h.hooks.Delete(id)
 
-	if failOnError(w, err) {
+	if failOnError(res, err) {
 		return
 	}
 
 	h.rabbit.DeleteUrlQueue(id)
 
-	w.WriteHeader(200)
+	res.WriteHeader(http.StatusNotFound)
 }
 
-func failOnError(w http.ResponseWriter, err error) bool {
+func failOnError(response *restful.Response, err error) bool {
 	if err == nil {
 		return false
 	}
 
 	msg := fmt.Sprintf("An error occurred: %s", err.Error())
-	http.Error(w, msg, 500)
+	response.WriteErrorString(http.StatusInternalServerError, msg)
 	return true
-}
-
-func ParseWebhookFromRequest(req *http.Request) (hook Webhook, err error) {
-	decoder := json.NewDecoder(req.Body)
-	err = decoder.Decode(&hook)
-	return
 }
