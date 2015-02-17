@@ -21,21 +21,36 @@ func Register(c *restful.Container, store Store, rabbit *rabbithole.Client) {
 	}
 
 	ws := new(restful.WebService)
-	ws.
-		Path("/webhooks").
+	ws.Path("/webhooks").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.GET("/").To(handler.List))
-	ws.Route(ws.GET("/{id:[0-9a-fA-F]{24}}").To(handler.Get))
-	ws.Route(ws.POST("/").To(handler.Post))
-	ws.Route(ws.DELETE("/{id:[0-9a-fA-F]{24}}").To(handler.Delete))
+	ws.Route(ws.GET("/").To(handler.List).
+		Doc("get all webhooks").
+		Operation("List").
+		Returns(200, "OK", []Webhook{}))
+
+	ws.Route(ws.GET("/{id}").To(handler.Get).
+		Doc("get a webhook").
+		Operation("Get").
+		Param(ws.PathParameter("id", "identifier of the webhook").DataType("string")).
+		Writes(Webhook{}))
+
+	ws.Route(ws.PUT("/").To(handler.Create).
+		Doc("create a webhook").
+		Operation("Create").
+		Reads(Webhook{}))
+
+	ws.Route(ws.DELETE("/{id}").To(handler.Delete).
+		Doc("delete a webhook").
+		Operation("Delete").
+		Param(ws.PathParameter("id", "identifier of the webhook").DataType("string")))
 
 	c.Add(ws)
 }
 
 // POST /webhooks
-func (h *WebhooksResource) Post(req *restful.Request, res *restful.Response) {
+func (h *WebhooksResource) Create(req *restful.Request, res *restful.Response) {
 	hook := new(Webhook)
 	err := req.ReadEntity(&hook)
 

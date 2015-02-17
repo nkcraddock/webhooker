@@ -2,11 +2,11 @@ package main
 
 import (
 	"net/http"
-	"os"
+
+	"github.com/emicklei/go-restful/swagger"
 
 	"github.com/emicklei/go-restful"
 
-	"github.com/gorilla/handlers"
 	"github.com/michaelklishin/rabbit-hole"
 
 	"github.com/nkcraddock/meathooks/db"
@@ -46,18 +46,22 @@ func init_rabbit(uri string, username string, password string) {
 	}
 }
 
-func main() {
-	container := restful.NewContainer()
-	container.Router(restful.CurlyRouter{})
+func init_swagger(container *restful.Container) {
+	swag := swagger.Config{
+		WebServices: container.RegisteredWebServices(),
+		// WebServicesUrl:  "http://localhost:3001",
+		ApiPath:         "/apidocs.json",
+		SwaggerPath:     "/apidocs/",
+		SwaggerFilePath: "/home/nathan/dev/swagger-ui/dist",
+	}
 
-	webhooks.Register(container, hooks, rabbit)
-
-	server := &http.Server{Addr: cfg.HostUrl, Handler: container}
-	server.ListenAndServe()
-	// 	chain := alice.New(loggerHandler).Then(router)
-	//	http.ListenAndServe(cfg.HostUrl, chain)
+	swagger.RegisterSwaggerService(swag, container)
 }
 
-func loggerHandler(next http.Handler) http.Handler {
-	return handlers.LoggingHandler(os.Stdout, next)
+func main() {
+	container := restful.NewContainer()
+	webhooks.Register(container, hooks, rabbit)
+
+	init_swagger(container)
+	http.ListenAndServe(cfg.HostUrl, container)
 }
