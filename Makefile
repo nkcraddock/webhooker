@@ -1,4 +1,4 @@
-default: deps debug
+default: build test
 
 clean: 
 	rm -rf build
