@@ -12,47 +12,38 @@ import (
 const sourceExchange = "amq.topic"
 
 type RabbitStore struct {
-	rb *rabbithole.Client
-	vh string
+	rb        *rabbithole.Client
+	vh        string
+	endpoints map[string]*endpoint
+}
+
+type endpoint struct {
+	url   string
+	hooks []Webhook
 }
 
 func NewRabbitStore(r *rabbithole.Client, vh string) Store {
 	setupVhost(r, vh)
 
-	return &RabbitStore{
+	s := &RabbitStore{
 		rb: r,
 		vh: vh,
 	}
+
+	s.reloadEndpoints()
+
+	return s
 }
 
 func (r *RabbitStore) All() (hooks []Webhook, err error) {
 	hooks = make([]Webhook, 0)
-
-	urls, err := r.getQueueUrls()
-
-	if err != nil {
-		return
+	for _, v := range r.endpoints {
+		hooks = append(hooks, v.hooks...)
 	}
-
-	bs, err := r.rb.ListBindingsIn(r.vh)
-
-	if err != nil {
-		return
-	}
-
-	for _, b := range bs {
-		if b.DestinationType == "exchange" {
-			if url, ok := urls[b.Destination]; ok {
-				h := NewWebhook(b.PropertiesKey, url, b.RoutingKey)
-				hooks = append(hooks, h)
-			}
-		}
-	}
-
 	return
 }
 
-func (r *RabbitStore) GetById(id string) Webhook {
+func (r RabbitStore) GetById(id string) Webhook {
 	return Webhook{}
 }
 
@@ -70,6 +61,8 @@ func (r *RabbitStore) Add(wh *Webhook) (err error) {
 	props, err := r.bindExchange(sourceExchange, qn, wh.Filter)
 
 	wh.Id = props
+
+	r.reloadEndpoints()
 
 	return
 }
@@ -158,8 +151,8 @@ func (r *RabbitStore) bindExchange(src, dst, filter string) (props string, err e
 	return
 }
 
-func (r *RabbitStore) getQueueUrls() (urls map[string]string, err error) {
-	urls = make(map[string]string)
+func (r *RabbitStore) getQueueUrls() (urls map[string]*endpoint, err error) {
+	urls = make(map[string]*endpoint)
 
 	qs, err := r.rb.ListQueuesIn(r.vh)
 	if err != nil {
@@ -169,10 +162,35 @@ func (r *RabbitStore) getQueueUrls() (urls map[string]string, err error) {
 	for _, q := range qs {
 		if arg, ok := q.Arguments["url"]; ok {
 			if url, ok := arg.(string); ok {
-				urls[q.Name] = url
+				urls[q.Name] = &endpoint{url: url, hooks: make([]Webhook, 0)}
 			}
 		}
 	}
 
 	return
+}
+
+func (r *RabbitStore) reloadEndpoints() {
+	endpoints, err := r.getQueueUrls()
+
+	if err != nil {
+		return
+	}
+
+	bs, err := r.rb.ListBindingsIn(r.vh)
+
+	if err != nil {
+		return
+	}
+
+	for _, b := range bs {
+		if b.DestinationType == "exchange" {
+			if ep, ok := endpoints[b.Destination]; ok {
+				h := NewWebhook(b.PropertiesKey, ep.url, b.RoutingKey)
+				ep.hooks = append(ep.hooks, h)
+			}
+		}
+	}
+
+	r.endpoints = endpoints
 }
