@@ -3,6 +3,7 @@ package webhooks
 import (
 	"crypto/sha1"
 	"encoding/base64"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -12,14 +13,9 @@ import (
 const sourceExchange = "amq.topic"
 
 type RabbitStore struct {
-	rb        *rabbithole.Client
-	vh        string
-	endpoints map[string]*endpoint
-}
-
-type endpoint struct {
-	url   string
-	hooks []Webhook
+	rb    *rabbithole.Client
+	vh    string
+	store *memoryStore
 }
 
 func NewRabbitStore(r *rabbithole.Client, vh string) Store {
@@ -30,39 +26,38 @@ func NewRabbitStore(r *rabbithole.Client, vh string) Store {
 		vh: vh,
 	}
 
-	s.reloadEndpoints()
+	// Load the webhooks from rabbit into a memory store
+	ms, _ := s.reloadMemoryStore()
+	s.store = ms
 
 	return s
 }
 
-func (r *RabbitStore) All() (hooks []Webhook, err error) {
-	hooks = make([]Webhook, 0)
-	for _, v := range r.endpoints {
-		hooks = append(hooks, v.hooks...)
-	}
+func (r *RabbitStore) AllHooksFor(hooker string) (hooks []Webhook, err error) {
+	hooks = r.store.getAll(hooker)
 	return
 }
 
-func (r RabbitStore) GetById(id string) Webhook {
-	return Webhook{}
+func (r RabbitStore) GetHookById(id string) (hook *Webhook, err error) {
+	return &Webhook{}, nil
 }
 
-func (r *RabbitStore) Delete(id string) error {
+func (r *RabbitStore) DeleteHook(id string) (err error) {
 	return nil
 }
 
-func (r *RabbitStore) Add(wh *Webhook) (err error) {
-	qn, err := r.setupUrlQueue(wh.CallbackURL)
+func (r *RabbitStore) AddHook(wh *Webhook) (err error) {
+	hooker := r.store.hookers[wh.Hooker]
+	qn, err := r.setupUrlQueue(hooker.Callback)
 
 	if err != nil {
 		return err
 	}
 
-	props, err := r.bindExchange(sourceExchange, qn, wh.Filter)
+	filter := fmt.Sprintf("%s.%s.%s", wh.Evt, wh.Src, wh.Key)
+	props, err := r.bindExchange(sourceExchange, qn, filter)
 
 	wh.Id = props
-
-	r.reloadEndpoints()
 
 	return
 }
@@ -151,8 +146,8 @@ func (r *RabbitStore) bindExchange(src, dst, filter string) (props string, err e
 	return
 }
 
-func (r *RabbitStore) getQueueUrls() (urls map[string]*endpoint, err error) {
-	urls = make(map[string]*endpoint)
+func (r *RabbitStore) reloadMemoryStore() (s *memoryStore, err error) {
+	s = newMemoryStore()
 
 	qs, err := r.rb.ListQueuesIn(r.vh)
 	if err != nil {
@@ -160,37 +155,58 @@ func (r *RabbitStore) getQueueUrls() (urls map[string]*endpoint, err error) {
 	}
 
 	for _, q := range qs {
-		if arg, ok := q.Arguments["url"]; ok {
-			if url, ok := arg.(string); ok {
-				urls[q.Name] = &endpoint{url: url, hooks: make([]Webhook, 0)}
-			}
+		secret, _ := q.Arguments["secret"].(string)
+		callback, _ := q.Arguments["callback"].(string)
+		s.hookers[q.Name] = Webhooker{
+			Id:       q.Name,
+			Secret:   secret,
+			Callback: callback,
 		}
 	}
 
 	return
 }
 
-func (r *RabbitStore) reloadEndpoints() {
-	endpoints, err := r.getQueueUrls()
+// func (r *RabbitStore) getQueueUrls() (urls map[string]*endpoint, err error) {
+// 	urls = make(map[string]*endpoint)
 
-	if err != nil {
-		return
-	}
+// 	qs, err := r.rb.ListQueuesIn(r.vh)
+// 	if err != nil {
+// 		return
+// 	}
 
-	bs, err := r.rb.ListBindingsIn(r.vh)
+// 	for _, q := range qs {
+// 		if arg, ok := q.Arguments["url"]; ok {
+// 			if url, ok := arg.(string); ok {
+// 				urls[q.Name] = &endpoint{url: url, hooks: make([]Webhook, 0)}
+// 			}
+// 		}
+// 	}
 
-	if err != nil {
-		return
-	}
+// 	return
+// }
 
-	for _, b := range bs {
-		if b.DestinationType == "exchange" {
-			if ep, ok := endpoints[b.Destination]; ok {
-				h := NewWebhook(b.PropertiesKey, ep.url, b.RoutingKey)
-				ep.hooks = append(ep.hooks, h)
-			}
-		}
-	}
+// func (r *RabbitStore) reloadEndpoints() {
+// 	endpoints, err := r.getQueueUrls()
 
-	r.endpoints = endpoints
-}
+// 	if err != nil {
+// 		return
+// 	}
+
+// 	bs, err := r.rb.ListBindingsIn(r.vh)
+
+// 	if err != nil {
+// 		return
+// 	}
+
+// 	for _, b := range bs {
+// 		if b.DestinationType == "exchange" {
+// 			if ep, ok := endpoints[b.Destination]; ok {
+// 				h := NewWebhook(b.PropertiesKey, ep.url, b.RoutingKey)
+// 				ep.hooks = append(ep.hooks, h)
+// 			}
+// 		}
+// 	}
+
+// 	r.endpoints = endpoints
+// }

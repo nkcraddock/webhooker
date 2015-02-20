@@ -7,12 +7,12 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
-type WebhooksResource struct {
+type webhooksHandler struct {
 	hooks Store
 }
 
 func Register(c *restful.Container, store Store) {
-	handler := WebhooksResource{hooks: store}
+	handler := webhooksHandler{hooks: store}
 
 	ws := new(restful.WebService)
 	ws.Path("/webhooks").
@@ -44,7 +44,7 @@ func Register(c *restful.Container, store Store) {
 }
 
 // POST /webhooks
-func (h *WebhooksResource) Create(req *restful.Request, res *restful.Response) {
+func (h *webhooksHandler) Create(req *restful.Request, res *restful.Response) {
 	hook := new(Webhook)
 	err := req.ReadEntity(&hook)
 
@@ -52,7 +52,7 @@ func (h *WebhooksResource) Create(req *restful.Request, res *restful.Response) {
 		return
 	}
 
-	err = h.hooks.Add(hook)
+	err = h.hooks.AddHook(hook)
 
 	if failOnError(res, err) {
 		return
@@ -63,8 +63,8 @@ func (h *WebhooksResource) Create(req *restful.Request, res *restful.Response) {
 	res.WriteHeader(http.StatusCreated)
 }
 
-func (h *WebhooksResource) List(req *restful.Request, res *restful.Response) {
-	hooks, err := h.hooks.All()
+func (h *webhooksHandler) List(req *restful.Request, res *restful.Response) {
+	hooks, err := h.hooks.AllHooksFor("12341234")
 
 	if failOnError(res, err) {
 		return
@@ -73,9 +73,9 @@ func (h *WebhooksResource) List(req *restful.Request, res *restful.Response) {
 	res.WriteEntity(hooks)
 }
 
-func (h *WebhooksResource) Get(req *restful.Request, res *restful.Response) {
+func (h *webhooksHandler) Get(req *restful.Request, res *restful.Response) {
 	id := req.PathParameter("id")
-	hook := h.hooks.GetById(id)
+	hook, _ := h.hooks.GetHookById(id)
 
 	if len(hook.Id) == 0 {
 		res.WriteHeader(http.StatusNotFound)
@@ -85,9 +85,9 @@ func (h *WebhooksResource) Get(req *restful.Request, res *restful.Response) {
 	res.WriteEntity(hook)
 }
 
-func (h *WebhooksResource) Delete(req *restful.Request, res *restful.Response) {
+func (h *webhooksHandler) Delete(req *restful.Request, res *restful.Response) {
 	id := req.PathParameter("id")
-	err := h.hooks.Delete(id)
+	err := h.hooks.DeleteHook(id)
 
 	if failOnError(res, err) {
 		return

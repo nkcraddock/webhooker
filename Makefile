@@ -9,6 +9,7 @@ deps:
 	go get github.com/michaelklishin/rabbit-hole
 	go get github.com/emicklei/go-restful
 	go get github.com/emicklei/go-restful/swagger
+	go get github.com/nu7hatch/gouuid
 
 debug: deps
 	go run cmd/server/*.go
