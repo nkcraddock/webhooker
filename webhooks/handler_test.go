@@ -19,14 +19,14 @@ func TestList(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/webhooks", nil)
 
 	store := &fakeStore{
-		all: func() []Webhook {
+		all: func() ([]Webhook, error) {
 			return []Webhook{
 				NewWebhook("54dac2b3c7f7324b40000001", "localhost/callback", "*"),
-			}
+			}, nil
 		},
 	}
 
-	Register(container, store, nil)
+	Register(container, store)
 	container.ServeHTTP(w, r)
 
 	response := parseResponseSet(w.Body)
@@ -49,7 +49,7 @@ func TestGetById(t *testing.T) {
 		},
 	}
 
-	Register(container, store, nil)
+	Register(container, store)
 	container.ServeHTTP(w, r)
 
 	response := parseResponse(w.Body)
@@ -80,7 +80,7 @@ func parseResponseSet(r io.Reader) []Webhook {
 
 type fakeStore struct {
 	add     func(*Webhook) error
-	all     func() []Webhook
+	all     func() ([]Webhook, error)
 	getById func(string) Webhook
 	del     func(string) error
 }
@@ -89,7 +89,7 @@ func (f *fakeStore) Add(wh *Webhook) error {
 	return f.add(wh)
 }
 
-func (f *fakeStore) All() []Webhook {
+func (f *fakeStore) All() ([]Webhook, error) {
 	return f.all()
 }
 

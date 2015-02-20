@@ -5,20 +5,14 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-
-	"github.com/michaelklishin/rabbit-hole"
 )
 
 type WebhooksResource struct {
-	hooks  Store
-	rabbit *rabbitFarm
+	hooks Store
 }
 
-func Register(c *restful.Container, store Store, rabbit *rabbithole.Client) {
-	handler := WebhooksResource{
-		hooks:  store,
-		rabbit: newRabbitFarm(rabbit),
-	}
+func Register(c *restful.Container, store Store) {
+	handler := WebhooksResource{hooks: store}
 
 	ws := new(restful.WebService)
 	ws.Path("/webhooks").
@@ -64,15 +58,18 @@ func (h *WebhooksResource) Create(req *restful.Request, res *restful.Response) {
 		return
 	}
 
-	h.rabbit.SaveUrlQueue(hook.Id.Hex())
-
-	uri := fmt.Sprintf("/webhooks/%s", hook.Id.Hex())
+	uri := fmt.Sprintf("/webhooks/%s", hook.Id)
 	res.AddHeader("Location", uri)
 	res.WriteHeader(http.StatusCreated)
 }
 
 func (h *WebhooksResource) List(req *restful.Request, res *restful.Response) {
-	hooks := h.hooks.All()
+	hooks, err := h.hooks.All()
+
+	if failOnError(res, err) {
+		return
+	}
+
 	res.WriteEntity(hooks)
 }
 
@@ -95,8 +92,6 @@ func (h *WebhooksResource) Delete(req *restful.Request, res *restful.Response) {
 	if failOnError(res, err) {
 		return
 	}
-
-	h.rabbit.DeleteUrlQueue(id)
 
 	res.WriteHeader(http.StatusNotFound)
 }
