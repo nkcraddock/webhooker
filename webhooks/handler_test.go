@@ -1,102 +1,102 @@
 package webhooks
 
-// import (
-// 	"encoding/json"
-// 	"io"
-// 	"io/ioutil"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"reflect"
-// 	"testing"
+import (
+	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
+	"testing"
 
-// 	"github.com/emicklei/go-restful"
-// )
+	"github.com/emicklei/go-restful"
+)
 
-// func TestList(t *testing.T) {
-// 	container := restful.NewContainer()
+func TestList(t *testing.T) {
+	container := restful.NewContainer()
 
-// 	w := httptest.NewRecorder()
-// 	r, _ := http.NewRequest("GET", "/webhooks", nil)
+	w := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "/webhooks", nil)
 
-// 	store := &fakeStore{
-// 		all: func() ([]Webhook, error) {
-// 			return []Webhook{
-// 				NewWebhook("54dac2b3c7f7324b40000001", "localhost/callback", "*"),
-// 			}, nil
-// 		},
-// 	}
+	store := &fakeStore{
+		allHooksFor: func(hooker string) ([]Webhook, error) {
+			return []Webhook{
+				NewWebhook("src", "evt", "key", "hooker"),
+			}, nil
+		},
+	}
 
-// 	Register(container, store)
-// 	container.ServeHTTP(w, r)
+	Register(container, store)
+	container.ServeHTTP(w, r)
 
-// 	response := parseResponseSet(w.Body)
+	response := parseResponseSet(w.Body)
 
-// 	if len(response) != 1 {
-// 		t.Errorf("Got the wrong number of results. Got %d, expected 1", len(response))
-// 	}
-// }
+	if len(response) != 1 {
+		t.Errorf("Got the wrong number of results. Got %d, expected 1", len(response))
+	}
+}
 
-// func TestGetById(t *testing.T) {
-// 	container := restful.NewContainer()
-// 	w := httptest.NewRecorder()
-// 	r, _ := http.NewRequest("GET", "/webhooks/54dac2b3c7f7324b40000001", nil)
+func TestGetById(t *testing.T) {
+	container := restful.NewContainer()
+	w := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "/webhooks/54dac2b3c7f7324b40000001", nil)
 
-// 	hook := NewWebhook("54dac2b3c7f7324b40000001", "localhost/callback", "*")
+	hook := NewWebhook("src", "evt", "key", "hooker")
 
-// 	store := &fakeStore{
-// 		getById: func(id string) Webhook {
-// 			return hook
-// 		},
-// 	}
+	store := &fakeStore{
+		getHookById: func(id string) (*Webhook, error) {
+			return &hook, nil
+		},
+	}
 
-// 	Register(container, store)
-// 	container.ServeHTTP(w, r)
+	Register(container, store)
+	container.ServeHTTP(w, r)
 
-// 	response := parseResponse(w.Body)
+	response := parseResponse(w.Body)
 
-// 	if !reflect.DeepEqual(response, hook) {
-// 		t.Errorf("Got the wrong response %e, expected %e", response, hook)
-// 	}
+	if !reflect.DeepEqual(response, hook) {
+		t.Errorf("Got the wrong response %e, expected %e", response, hook)
+	}
 
-// 	if w.Code != 200 {
-// 		t.Errorf("Got the wrong response code %d expected 200", w.Code)
-// 	}
+	if w.Code != 200 {
+		t.Errorf("Got the wrong response code %d expected 200", w.Code)
+	}
 
-// }
+}
 
-// func parseResponse(r io.Reader) Webhook {
-// 	var hook Webhook
-// 	b, _ := ioutil.ReadAll(r)
-// 	json.Unmarshal(b, &hook)
-// 	return hook
-// }
+func parseResponse(r io.Reader) Webhook {
+	var hook Webhook
+	b, _ := ioutil.ReadAll(r)
+	json.Unmarshal(b, &hook)
+	return hook
+}
 
-// func parseResponseSet(r io.Reader) []Webhook {
-// 	var hooks []Webhook
-// 	b, _ := ioutil.ReadAll(r)
-// 	json.Unmarshal(b, &hooks)
-// 	return hooks
-// }
+func parseResponseSet(r io.Reader) []Webhook {
+	var hooks []Webhook
+	b, _ := ioutil.ReadAll(r)
+	json.Unmarshal(b, &hooks)
+	return hooks
+}
 
-// type fakeStore struct {
-// 	add     func(*Webhook) error
-// 	all     func() ([]Webhook, error)
-// 	getById func(string) Webhook
-// 	del     func(string) error
-// }
+type fakeStore struct {
+	addHook     func(*Webhook) error
+	allHooksFor func(string) ([]Webhook, error)
+	getHookById func(string) (*Webhook, error)
+	deleteHook  func(string) error
+}
 
-// func (f *fakeStore) Add(wh *Webhook) error {
-// 	return f.add(wh)
-// }
+func (f *fakeStore) AddHook(wh *Webhook) error {
+	return f.addHook(wh)
+}
 
-// func (f *fakeStore) All() ([]Webhook, error) {
-// 	return f.all()
-// }
+func (f *fakeStore) AllHooksFor(hooker string) ([]Webhook, error) {
+	return f.allHooksFor(hooker)
+}
 
-// func (f *fakeStore) GetById(id string) Webhook {
-// 	return f.getById(id)
-// }
+func (f *fakeStore) GetHookById(id string) (*Webhook, error) {
+	return f.getHookById(id)
+}
 
-// func (f *fakeStore) Delete(id string) error {
-// 	return f.del(id)
-// }
+func (f *fakeStore) DeleteHook(id string) error {
+	return f.deleteHook(id)
+}
