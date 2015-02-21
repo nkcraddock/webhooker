@@ -55,24 +55,39 @@ func (r *RabbitStore) AddHook(wh *Webhook) (err error) {
 	}
 
 	filter := fmt.Sprintf("%s.%s.%s", wh.Evt, wh.Src, wh.Key)
-	props, err := r.bindExchange(sourceExchange, qn, filter)
 
-	wh.Id = props
+	args := map[string]interface{}{
+		"id":  wh.Id,
+		"src": wh.Src,
+		"evt": wh.Evt,
+		"key": wh.Key,
+	}
+	props, err := r.bindExchange(sourceExchange, qn, filter, args)
+
+	wh.Props = props
+
+	r.store.hooks[wh.Id] = *wh
 
 	return
 }
 
 func setupVhost(r *rabbithole.Client, vh string) (err error) {
-	permissions := rabbithole.Permissions{Configure: "*", Write: "*", Read: "*"}
 	_, err = r.PutVhost(vh, rabbithole.VhostSettings{Tracing: false})
 
 	if err != nil {
 		return
 	}
 
+	permissions := rabbithole.Permissions{Configure: ".*", Write: ".*", Read: ".*"}
 	_, err = r.UpdatePermissionsIn(vh, r.Username, permissions)
 
 	return
+}
+
+func generateEndpointQueueName(url string) string {
+	h := sha1.New()
+	h.Write([]byte(url))
+	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
 func (r *RabbitStore) setupUrlQueue(url string) (qn string, err error) {
@@ -91,12 +106,6 @@ func (r *RabbitStore) setupUrlQueue(url string) (qn string, err error) {
 	err = r.bindQueue(qn)
 
 	return
-}
-
-func generateEndpointQueueName(url string) string {
-	h := sha1.New()
-	h.Write([]byte(url))
-	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
 func (r *RabbitStore) createQueue(url string) (name string, err error) {
@@ -129,12 +138,13 @@ func (r *RabbitStore) bindQueue(qn string) (err error) {
 	return
 }
 
-func (r *RabbitStore) bindExchange(src, dst, filter string) (props string, err error) {
+func (r *RabbitStore) bindExchange(src, dst, filter string, args map[string]interface{}) (props string, err error) {
 	res, err := r.rb.DeclareBinding(r.vh, rabbithole.BindingInfo{
 		Source:          src,
 		Destination:     dst,
 		DestinationType: "exchange",
 		RoutingKey:      filter,
+		Arguments:       args,
 	})
 
 	if err != nil {
@@ -164,49 +174,31 @@ func (r *RabbitStore) reloadMemoryStore() (s *memoryStore, err error) {
 		}
 	}
 
+	bs, err := r.rb.ListBindingsIn(r.vh)
+	if err != nil {
+		return
+	}
+
+	for _, b := range bs {
+		// We're only interested in exchange->exchange bindings
+		if b.DestinationType != "exchange" {
+			continue
+		}
+
+		id, _ := b.Arguments["id"].(string)
+		src, _ := b.Arguments["src"].(string)
+		evt, _ := b.Arguments["evt"].(string)
+		key, _ := b.Arguments["key"].(string)
+
+		s.hooks[id] = Webhook{
+			Id:     id,
+			Src:    src,
+			Evt:    evt,
+			Key:    key,
+			Hooker: b.Destination,
+			Props:  b.PropertiesKey,
+		}
+	}
+
 	return
 }
-
-// func (r *RabbitStore) getQueueUrls() (urls map[string]*endpoint, err error) {
-// 	urls = make(map[string]*endpoint)
-
-// 	qs, err := r.rb.ListQueuesIn(r.vh)
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	for _, q := range qs {
-// 		if arg, ok := q.Arguments["url"]; ok {
-// 			if url, ok := arg.(string); ok {
-// 				urls[q.Name] = &endpoint{url: url, hooks: make([]Webhook, 0)}
-// 			}
-// 		}
-// 	}
-
-// 	return
-// }
-
-// func (r *RabbitStore) reloadEndpoints() {
-// 	endpoints, err := r.getQueueUrls()
-
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	bs, err := r.rb.ListBindingsIn(r.vh)
-
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	for _, b := range bs {
-// 		if b.DestinationType == "exchange" {
-// 			if ep, ok := endpoints[b.Destination]; ok {
-// 				h := NewWebhook(b.PropertiesKey, ep.url, b.RoutingKey)
-// 				ep.hooks = append(ep.hooks, h)
-// 			}
-// 		}
-// 	}
-
-// 	r.endpoints = endpoints
-// }

@@ -52,6 +52,8 @@ func (h *webhooksHandler) Create(req *restful.Request, res *restful.Response) {
 		return
 	}
 
+	hook.Id = getId()
+
 	err = h.hooks.AddHook(hook)
 
 	if failOnError(res, err) {

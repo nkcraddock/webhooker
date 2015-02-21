@@ -9,12 +9,10 @@ import (
 
 	"github.com/michaelklishin/rabbit-hole"
 
-	"github.com/nkcraddock/meathooks/db"
 	"github.com/nkcraddock/meathooks/webhooks"
 )
 
 var (
-	conn  *db.Connection
 	cfg   config
 	hooks webhooks.Store
 )
