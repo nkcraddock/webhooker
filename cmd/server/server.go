@@ -2,6 +2,8 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/emicklei/go-restful/swagger"
 
@@ -34,11 +36,12 @@ func init_rabbit(uri string, username string, password string) {
 }
 
 func init_swagger(container *restful.Container) {
+	cur, _ := os.Getwd()
 	swag := swagger.Config{
 		WebServices:     container.RegisteredWebServices(),
 		ApiPath:         "/apidocs.json",
 		SwaggerPath:     "/apidocs/",
-		SwaggerFilePath: "/home/nathan/dev/swagger-ui/dist",
+		SwaggerFilePath: filepath.Join(cur, "swagger"),
 	}
 
 	swagger.RegisterSwaggerService(swag, container)
