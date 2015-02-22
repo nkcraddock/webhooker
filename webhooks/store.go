@@ -7,5 +7,6 @@ type Store interface {
 	DeleteHook(string) error
 	AddHooker(*Webhooker) error
 	AllHookers() ([]Webhooker, error)
-	//	DeleteHooker(id string) error
+	DeleteHooker(id string) error
+	GetHooker(id string) (*Webhooker, error)
 }

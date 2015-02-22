@@ -28,21 +28,21 @@ func RegisterHookers(c *restful.Container, store Store) {
 		Operation("List").
 		Returns(200, "OK", []Webhooker{}))
 
-	//ws.Route(ws.GET("/{id}").To(handler.Get).
-	//Doc("get a webhooker").
-	//Operation("Get").
-	//Param(ws.PathParameter("id", "identifier of the webhooker").DataType("string")).
-	//Writes(Webhooker{}))
+	ws.Route(ws.GET("/{id}").To(handler.Get).
+		Doc("get a webhooker").
+		Operation("Get").
+		Param(ws.PathParameter("id", "identifier of the webhooker").DataType("string")).
+		Writes(Webhooker{}))
 
 	ws.Route(ws.POST("/").To(handler.Create).
 		Doc("create a webhooker").
 		Operation("Create").
 		Reads(HookerRegistration{}))
 
-	//ws.Route(ws.DELETE("/{id}").To(handler.Delete).
-	//Doc("delete a webhooker").
-	//Operation("Delete").
-	//Param(ws.PathParameter("id", "identifier of the webhook").DataType("string")))
+	ws.Route(ws.DELETE("/{id}").To(handler.Delete).
+		Doc("delete a webhooker").
+		Operation("Delete").
+		Param(ws.PathParameter("id", "identifier of the webhook").DataType("string")))
 
 	c.Add(ws)
 }
@@ -77,25 +77,25 @@ func (h *webhookersHandler) List(req *restful.Request, res *restful.Response) {
 	res.WriteEntity(hookers)
 }
 
-//func (h *webhookersHandler) Get(req *restful.Request, res *restful.Response) {
-//id := req.PathParameter("id")
-//hook, _ := h.hooks.GetHookById(id)
+func (h *webhookersHandler) Get(req *restful.Request, res *restful.Response) {
+	id := req.PathParameter("id")
+	hooker, _ := h.hooks.GetHooker(id)
 
-//if len(hook.Id) == 0 {
-//res.WriteHeader(http.StatusNotFound)
-//return
-//}
+	if len(hooker.Id) == 0 {
+		res.WriteHeader(http.StatusNotFound)
+		return
+	}
 
-//res.WriteEntity(hook)
-//}
+	res.WriteEntity(hooker)
+}
 
-//func (h *webhookersHandler) Delete(req *restful.Request, res *restful.Response) {
-//id := req.PathParameter("id")
-//err := h.hooks.DeleteHooker(id)
+func (h *webhookersHandler) Delete(req *restful.Request, res *restful.Response) {
+	id := req.PathParameter("id")
+	err := h.hooks.DeleteHooker(id)
 
-//if failOnError(res, err) {
-//return
-//}
+	if failOnError(res, err) {
+		return
+	}
 
-//res.WriteHeader(http.StatusNotFound)
-//}
+	res.WriteHeader(http.StatusNotFound)
+}

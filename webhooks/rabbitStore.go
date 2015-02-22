@@ -33,6 +33,8 @@ func NewRabbitStore(r *rabbithole.Client, vh string) Store {
 	return s
 }
 
+// HOOKERS
+
 func (r *RabbitStore) AddHooker(hooker *Webhooker) (err error) {
 	if _, ok := r.store.hookers[hooker.Id]; ok {
 		return fmt.Errorf("This Webhooker is already registered '%s'", hooker.Callback)
@@ -53,6 +55,44 @@ func (r *RabbitStore) AllHookers() (hookers []Webhooker, err error) {
 
 	return
 }
+
+func (r *RabbitStore) DeleteHooker(id string) (err error) {
+	_, ok := r.store.hookers[id]
+
+	if !ok {
+		return fmt.Errorf("No such hooker '%s'", id)
+	}
+
+	_, err = r.rb.DeleteQueue(r.vh, id)
+
+	if err != nil {
+		return
+	}
+
+	_, err = r.rb.DeleteExchange(r.vh, id)
+
+	if err != nil {
+		return
+	}
+
+	delete(r.store.hookers, id)
+
+	// DELETE ALL THE HOOKS TOO
+
+	return
+}
+
+func (r *RabbitStore) GetHooker(id string) (hooker *Webhooker, err error) {
+	h, ok := r.store.hookers[id]
+
+	if !ok {
+		return nil, fmt.Errorf("No such hooker '%s'", id)
+	}
+
+	return &h, nil
+}
+
+// HOOKS
 
 func (r *RabbitStore) AllHooksFor(hooker string) (hooks []Webhook, err error) {
 	hooks = r.store.getAll(hooker)
@@ -165,7 +205,7 @@ func (r *RabbitStore) createQueue(name string, args map[string]interface{}) (err
 
 func (r *RabbitStore) createExchange(name string) (err error) {
 	_, err = r.rb.DeclareExchange(r.vh, name, rabbithole.ExchangeSettings{
-		Type: "direct",
+		Type: "topic",
 	})
 
 	return
