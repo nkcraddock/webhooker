@@ -26,7 +26,7 @@ func TestList(t *testing.T) {
 		},
 	}
 
-	Register(container, store)
+	RegisterHooks(container, store)
 	container.ServeHTTP(w, r)
 
 	response := parseResponseSet(w.Body)
@@ -49,7 +49,7 @@ func TestGetById(t *testing.T) {
 		},
 	}
 
-	Register(container, store)
+	RegisterHooks(container, store)
 	container.ServeHTTP(w, r)
 
 	response := parseResponse(w.Body)
@@ -79,10 +79,30 @@ func parseResponseSet(r io.Reader) []Webhook {
 }
 
 type fakeStore struct {
-	addHook     func(*Webhook) error
-	allHooksFor func(string) ([]Webhook, error)
-	getHookById func(string) (*Webhook, error)
-	deleteHook  func(string) error
+	addHook       func(*Webhook) error
+	allHooksFor   func(string) ([]Webhook, error)
+	getHookById   func(string) (*Webhook, error)
+	deleteHook    func(string) error
+	addHooker     func(*Webhooker) error
+	allHookers    func() ([]Webhooker, error)
+	getHookerById func(string) (*Webhooker, error)
+	deleteHooker  func(string) error
+}
+
+func (f *fakeStore) AddHooker(h *Webhooker) error {
+	return f.addHooker(h)
+}
+
+func (f *fakeStore) AllHookers() ([]Webhooker, error) {
+	return f.allHookers()
+}
+
+func (f *fakeStore) GetHookerById(id string) (*Webhooker, error) {
+	return f.getHookerById(id)
+}
+
+func (f *fakeStore) DeleteHooker(id string) error {
+	return f.deleteHooker(id)
 }
 
 func (f *fakeStore) AddHook(wh *Webhook) error {

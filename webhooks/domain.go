@@ -19,8 +19,8 @@ type Webhook struct {
 	Hooker string `json:"hooker" bson:"hooker"`
 }
 
-func NewWebHooker(callback string) Webhooker {
-	return Webhooker{
+func NewWebHooker(callback string) *Webhooker {
+	return &Webhooker{
 		Id:       getId(),
 		Secret:   getId(),
 		Callback: callback,

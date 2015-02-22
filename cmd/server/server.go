@@ -49,7 +49,8 @@ func init_swagger(container *restful.Container) {
 
 func main() {
 	container := restful.NewContainer()
-	webhooks.Register(container, hooks)
+	webhooks.RegisterHooks(container, hooks)
+	webhooks.RegisterHookers(container, hooks)
 
 	init_swagger(container)
 	http.ListenAndServe(cfg.HostUrl, container)

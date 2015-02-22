@@ -33,6 +33,27 @@ func NewRabbitStore(r *rabbithole.Client, vh string) Store {
 	return s
 }
 
+func (r *RabbitStore) AddHooker(hooker *Webhooker) (err error) {
+	if _, ok := r.store.hookers[hooker.Id]; ok {
+		return fmt.Errorf("This Webhooker is already registered '%s'", hooker.Callback)
+	}
+
+	r.store.hookers[hooker.Id] = *hooker
+	r.putHooker(hooker)
+
+	return
+}
+
+func (r *RabbitStore) AllHookers() (hookers []Webhooker, err error) {
+	hookers = make([]Webhooker, 0)
+
+	for _, h := range r.store.hookers {
+		hookers = append(hookers, h)
+	}
+
+	return
+}
+
 func (r *RabbitStore) AllHooksFor(hooker string) (hooks []Webhook, err error) {
 	hooks = r.store.getAll(hooker)
 	return
@@ -43,18 +64,37 @@ func (r RabbitStore) GetHookById(id string) (hook *Webhook, err error) {
 }
 
 func (r *RabbitStore) DeleteHook(id string) (err error) {
-	return nil
+	hook, ok := r.store.hooks[id]
+	if !ok {
+		return fmt.Errorf("No such hook '%s'", id)
+	}
+
+	_, err = r.rb.DeleteBinding(r.vh, rabbithole.BindingInfo{
+		Source:          sourceExchange,
+		Destination:     hook.Hooker,
+		DestinationType: "exchange",
+		RoutingKey:      getHookFilter(&hook),
+		PropertiesKey:   hook.Props,
+	})
+
+	if err != nil {
+		return
+	}
+
+	delete(r.store.hooks, id)
+
+	return
 }
 
 func (r *RabbitStore) AddHook(wh *Webhook) (err error) {
-	hooker := r.store.hookers[wh.Hooker]
-	qn, err := r.setupUrlQueue(hooker.Callback)
+	// make sure theres a hooker
+	_, ok := r.store.hookers[wh.Hooker]
 
-	if err != nil {
-		return err
+	if !ok {
+		return fmt.Errorf("Couldn't find the hooker '%s'", wh.Hooker)
 	}
 
-	filter := fmt.Sprintf("%s.%s.%s", wh.Evt, wh.Src, wh.Key)
+	filter := getHookFilter(wh)
 
 	args := map[string]interface{}{
 		"id":  wh.Id,
@@ -62,7 +102,7 @@ func (r *RabbitStore) AddHook(wh *Webhook) (err error) {
 		"evt": wh.Evt,
 		"key": wh.Key,
 	}
-	props, err := r.bindExchange(sourceExchange, qn, filter, args)
+	props, err := r.bindExchange(sourceExchange, wh.Hooker, filter, args)
 
 	wh.Props = props
 
@@ -90,30 +130,34 @@ func generateEndpointQueueName(url string) string {
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
-func (r *RabbitStore) setupUrlQueue(url string) (qn string, err error) {
-	qn, err = r.createQueue(url)
+func (r *RabbitStore) putHooker(h *Webhooker) (err error) {
+	args := map[string]interface{}{
+		"callback": h.Callback,
+		"secret":   h.Secret,
+	}
+
+	err = r.createQueue(h.Id, args)
 
 	if err != nil {
 		return
 	}
 
-	err = r.createExchange(qn)
+	err = r.createExchange(h.Id)
 
 	if err != nil {
 		return
 	}
 
-	err = r.bindQueue(qn)
+	err = r.bindQueue(h.Id)
 
 	return
 }
 
-func (r *RabbitStore) createQueue(url string) (name string, err error) {
-	name = generateEndpointQueueName(url)
+func (r *RabbitStore) createQueue(name string, args map[string]interface{}) (err error) {
 	_, err = r.rb.DeclareQueue(r.vh, name, rabbithole.QueueSettings{
 		Durable:    false,
 		AutoDelete: false,
-		Arguments:  map[string]interface{}{"url": url},
+		Arguments:  args,
 	})
 
 	return
@@ -201,4 +245,8 @@ func (r *RabbitStore) reloadMemoryStore() (s *memoryStore, err error) {
 	}
 
 	return
+}
+
+func getHookFilter(wh *Webhook) string {
+	return fmt.Sprintf("%s.%s.%s", wh.Src, wh.Evt, wh.Key)
 }

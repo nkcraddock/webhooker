@@ -11,7 +11,7 @@ type webhooksHandler struct {
 	hooks Store
 }
 
-func Register(c *restful.Container, store Store) {
+func RegisterHooks(c *restful.Container, store Store) {
 	handler := webhooksHandler{hooks: store}
 
 	ws := new(restful.WebService)
