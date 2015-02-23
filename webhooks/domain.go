@@ -6,7 +6,7 @@ import (
 
 type Webhooker struct {
 	Id       string `json:"id" bson:"id"`
-	Secret   string `json:"secret" bson:"secret"`
+	Secret   string `json:"-" bson:"secret"`
 	Callback string `json:"callback" bson:"callback"`
 }
 

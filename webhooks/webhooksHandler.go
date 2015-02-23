@@ -15,7 +15,7 @@ func RegisterHooks(c *restful.Container, store Store) {
 	handler := webhooksHandler{hooks: store}
 
 	ws := new(restful.WebService)
-	ws.Path("/webhooks").
+	ws.Path("/api/webhooks").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 

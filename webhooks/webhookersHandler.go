@@ -19,7 +19,7 @@ func RegisterHookers(c *restful.Container, store Store) {
 	handler := webhookersHandler{hooks: store}
 
 	ws := new(restful.WebService)
-	ws.Path("/webhookers").
+	ws.Path("/api/webhookers").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 

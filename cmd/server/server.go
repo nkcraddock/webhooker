@@ -39,8 +39,8 @@ func init_swagger(container *restful.Container) {
 	cur, _ := os.Getwd()
 	swag := swagger.Config{
 		WebServices:     container.RegisteredWebServices(),
-		ApiPath:         "/apidocs.json",
-		SwaggerPath:     "/apidocs/",
+		ApiPath:         "/api/docs.json",
+		SwaggerPath:     "/api/docs/",
 		SwaggerFilePath: filepath.Join(cur, "swagger"),
 	}
 
