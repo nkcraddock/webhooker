@@ -1,4 +1,4 @@
-#webhooker - minimal webhooks-as-a-service
+#webhooker
 A simple webhooks implementation that uses rabbit for probably too much. (or not quite enough)
 
 #For Subscribers
@@ -31,7 +31,7 @@ POST /api/webhook
 
 # Response
 STATUS 201 Created
-Location: https://meathooks.com/api/webhook/c0bfa00b-02be-4493-9464-29f185836d4a
+HEADER "Location": "https://meathooks.com/api/webhook/c0bfa00b-02be-4493-9464-29f185836d4a"
 ```
 
 ### Wait for events!
