@@ -7,7 +7,9 @@ import (
 type Webhooker struct {
 	Id       string `json:"id" bson:"id"`
 	Secret   string `json:"-" bson:"secret"`
-	Callback string `json:"callback" bson:"callback"`
+	Name string `json:"name"`
+	Email string `json:"email"`
+	Callback string `json:"callback"`
 }
 
 type Webhook struct {
@@ -19,11 +21,19 @@ type Webhook struct {
 	Hooker string `json:"hooker" bson:"hooker"`
 }
 
-func NewWebHooker(callback string) *Webhooker {
+type HookerRegistration struct {
+	Name string `json:"name"`
+	Email string `json:"email"`
+	Callback string `json:"callback"`
+}
+
+func NewWebHooker(reg *HookerRegistration) *Webhooker {
 	return &Webhooker{
 		Id:       getId(),
 		Secret:   getId(),
-		Callback: callback,
+		Callback: reg.Callback,
+		Email: reg.Email,
+		Name: reg.Name,
 	}
 }
 

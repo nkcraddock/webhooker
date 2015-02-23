@@ -11,10 +11,6 @@ type webhookersHandler struct {
 	hooks Store
 }
 
-type HookerRegistration struct {
-	Callback string `json:"callback"`
-}
-
 func RegisterHookers(c *restful.Container, store Store) {
 	handler := webhookersHandler{hooks: store}
 
@@ -34,9 +30,9 @@ func RegisterHookers(c *restful.Container, store Store) {
 		Param(ws.PathParameter("id", "identifier of the webhooker").DataType("string")).
 		Writes(Webhooker{}))
 
-	ws.Route(ws.POST("/").To(handler.Create).
-		Doc("create a webhooker").
-		Operation("Create").
+	ws.Route(ws.POST("/register").To(handler.Register).
+		Doc("register a new webhooker").
+		Operation("Register").
 		Reads(HookerRegistration{}))
 
 	ws.Route(ws.DELETE("/{id}").To(handler.Delete).
@@ -47,7 +43,7 @@ func RegisterHookers(c *restful.Container, store Store) {
 	c.Add(ws)
 }
 
-func (h *webhookersHandler) Create(req *restful.Request, res *restful.Response) {
+func (h *webhookersHandler) Register(req *restful.Request, res *restful.Response) {
 	reg := new(HookerRegistration)
 	err := req.ReadEntity(&reg)
 
@@ -55,7 +51,7 @@ func (h *webhookersHandler) Create(req *restful.Request, res *restful.Response) 
 		return
 	}
 
-	hooker := NewWebHooker(reg.Callback)
+	hooker := NewWebHooker(reg)
 	err = h.hooks.AddHooker(hooker)
 
 	if failOnError(res, err) {

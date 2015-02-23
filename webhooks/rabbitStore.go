@@ -174,6 +174,8 @@ func (r *RabbitStore) putHooker(h *Webhooker) (err error) {
 	args := map[string]interface{}{
 		"callback": h.Callback,
 		"secret":   h.Secret,
+		"email": h.Email,
+		"name": h.Name,
 	}
 
 	err = r.createQueue(h.Id, args)

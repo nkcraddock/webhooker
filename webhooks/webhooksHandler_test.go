@@ -16,7 +16,7 @@ func TestList(t *testing.T) {
 	container := restful.NewContainer()
 
 	w := httptest.NewRecorder()
-	r, _ := http.NewRequest("GET", "/webhooks", nil)
+	r, _ := http.NewRequest("GET", "/api/webhooks", nil)
 
 	store := &fakeStore{
 		allHooksFor: func(hooker string) ([]Webhook, error) {
@@ -39,7 +39,7 @@ func TestList(t *testing.T) {
 func TestGetById(t *testing.T) {
 	container := restful.NewContainer()
 	w := httptest.NewRecorder()
-	r, _ := http.NewRequest("GET", "/webhooks/54dac2b3c7f7324b40000001", nil)
+	r, _ := http.NewRequest("GET", "/api/webhooks/54dac2b3c7f7324b40000001", nil)
 
 	hook := NewWebhook("src", "evt", "key", "hooker")
 
