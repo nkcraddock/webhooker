@@ -1,4 +1,4 @@
-#webhooker
+#webhooker - [![status](https://travis-ci.org/nkcraddock/webhooker.svg?branch=master)](https://travis-ci.org/nkcraddock/webhooker)
 A simple webhooks implementation that uses rabbit for probably too much. (or not quite enough)
 
 #For Subscribers
