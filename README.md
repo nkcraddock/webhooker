@@ -8,6 +8,7 @@ A simple webhooks implementation that uses rabbit for probably too much. (or not
 # Request
 POST /api/register
 {
+    "url": "https://user-e-nelson.com/api/sourceapp-callback",
     "email": "user@email.com",
     "name": "Bropocalypse.com"
 }
@@ -23,7 +24,6 @@ BODY "An api access key has been emailed to the specified address."
 # Request
 POST /api/webhook
 {
-    "url": "https://user-e-nelson.com/api/sourceapp-callback",
     "evt": "user.*",
     "src": "sourceApp",
     "key": "Company_123"
