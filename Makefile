@@ -1,24 +1,29 @@
+VENDOR=$(CURDIR)/_vendor
+GOPATH=$(VENDOR):$(realpath ../../../..)
 default: build test
 
 clean: 
 	rm -rf build
 
-deps:
+vendor:
+	GOPATH=$(VENDOR)
+	mkdir -p $(VENDOR)
 	go get gopkg.in/mgo.v2
 	go get github.com/justinas/alice
 	go get github.com/michaelklishin/rabbit-hole
 	go get github.com/emicklei/go-restful
 	go get github.com/emicklei/go-restful/swagger
 	go get github.com/nu7hatch/gouuid
+	find $(VENDOR) -type d -name '.git' | xargs rm -rf
 
-debug: deps
+debug: vendor
 	go run cmd/server/*.go
 
-build: deps clean
+build: vendor clean
 	mkdir -p ./build/
 	go build -o ./build/server cmd/server/*.go  
 
-test: deps
+test: vendor
 	go test -v ./...
 
 reset-rabbit:
