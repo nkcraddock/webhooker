@@ -20,7 +20,7 @@ func loadConfig() config {
 	rabbitUri := flag.String("rabbitUri", "http://localhost:15672", "The URL of the rabbit management server")
 	rabbitUsername := flag.String("rabbitUser", "guest", "The username to use for rabbit")
 	rabbitPassword := flag.String("rabbitPass", "guest", "The password to use for rabbit")
-	database := flag.String("db", "meathooks", "The name of the mongo database")
+	database := flag.String("db", "webhooker", "The name of the mongo database")
 	logLevel := flag.String("l", "debug", "The log level to output to logs. (debug|info|warning|error|fatal)")
 
 	flag.Parse()

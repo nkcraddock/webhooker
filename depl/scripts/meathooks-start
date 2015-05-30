@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /opt/meathooks/server -h ":80"
+exec /opt/webhooker/server -h ":80"

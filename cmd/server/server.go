@@ -11,7 +11,7 @@ import (
 
 	"github.com/michaelklishin/rabbit-hole"
 
-	"github.com/nkcraddock/meathooks/webhooks"
+	"github.com/nkcraddock/webhooker/webhooks"
 )
 
 var (
@@ -32,7 +32,7 @@ func init_rabbit(uri string, username string, password string) {
 		panic("Failed to connect to rabbit")
 	}
 
-	hooks = webhooks.NewRabbitStore(rabbit, "meathooks")
+	hooks = webhooks.NewRabbitStore(rabbit, "webhooker")
 }
 
 func init_swagger(container *restful.Container) {

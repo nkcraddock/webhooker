@@ -31,8 +31,8 @@ VOLUME ["/data/db", "/data/log", "/data/mnesia"]
 
 WORKDIR /data
 
-ADD build/server /opt/meathooks/server
-ADD depl/scripts/meathooks-start /etc/service/meathooks-server/run
+ADD build/server /opt/webhooker/server
+ADD depl/scripts/webhooker-start /etc/service/webhooker-server/run
 ADD depl/scripts/rabbitmq-start /etc/service/rabbitmq/run
 ADD depl/scripts/mongodb-start /etc/service/mongodb/run
 
