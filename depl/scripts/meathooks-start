@@ -1,2 +1,0 @@
-#!/bin/sh
-exec /opt/webhooker/server -h ":80"

@@ -21,4 +21,12 @@ var _ = Describe("Domain unit tests", func() {
 			Ω(hook.Secret).ShouldNot(Equal(""))
 		})
 	})
+
+	Context("Hook.NewFilter", func() {
+		It("creates a new filter for the hook", func() {
+			hook := domain.NewHook("url", 5)
+			filter := hook.NewFilter("src", "evt", "key")
+			Ω(filter.Hook).Should(Equal(hook.Id))
+		})
+	})
 })

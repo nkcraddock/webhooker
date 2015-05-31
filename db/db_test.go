@@ -20,6 +20,7 @@ var _ = Describe("RedisHookerStore integration tests", func() {
 	var store domain.Store
 	var client *redis.Client
 	var testhook *domain.Hook
+	var testfilter *domain.Filter
 
 	BeforeEach(func() {
 		client = redis.NewClient(&redis.Options{
@@ -35,6 +36,7 @@ var _ = Describe("RedisHookerStore integration tests", func() {
 		})
 
 		testhook = domain.NewHook("url", 100)
+		testfilter = testhook.NewFilter("testfilter", "evt", "key")
 	})
 
 	AfterEach(func() {
@@ -88,4 +90,51 @@ var _ = Describe("RedisHookerStore integration tests", func() {
 			Ω(hooks).Should(HaveLen(2))
 		})
 	})
+
+	Context("SaveFilter", func() {
+		It("saves a new filter", func() {
+			store.SaveHook(testhook)
+			filter := testhook.NewFilter("url", "evt", "key")
+			err := store.SaveFilter(filter)
+			Ω(err).ShouldNot(HaveOccurred())
+		})
+	})
+
+	Context("GetFilters", func() {
+		It("returns the filters for a given hook id", func() {
+			hookOne := domain.NewHook("one", 1)
+			filterOne := hookOne.NewFilter("fone", "evt", "key")
+			store.SaveHook(hookOne)
+			store.SaveFilter(filterOne)
+
+			hookTwo := domain.NewHook("two", 2)
+			filterTwo := hookTwo.NewFilter("ftwo", "evt", "key")
+			store.SaveHook(hookTwo)
+			store.SaveFilter(filterTwo)
+
+			filters, err := store.GetFilters(hookOne.Id)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(filters).Should(HaveLen(1))
+			Ω(filters[0]).Should(Equal(filterOne))
+
+			filters, err = store.GetFilters(hookTwo.Id)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(filters).Should(HaveLen(1))
+			Ω(filters[0]).Should(Equal(filterTwo))
+		})
+	})
+
+	Context("DeleteFilter", func() {
+		It("deletes a filter", func() {
+			store.SaveHook(testhook)
+			store.SaveFilter(testfilter)
+
+			err := store.DeleteFilter(testfilter.Hook, testfilter.Id)
+			Ω(err).ShouldNot(HaveOccurred())
+
+			filter, _ := store.GetFilters(testfilter.Hook)
+			Ω(filter).Should(HaveLen(0))
+		})
+	})
+
 })
