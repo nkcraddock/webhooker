@@ -1,0 +1,9 @@
+
+.clicky {
+  cursor: pointer;
+  cursor: hand;
+}
+
+.clicky:hover {
+  background:rgba(0,0,0,0.01);
+}

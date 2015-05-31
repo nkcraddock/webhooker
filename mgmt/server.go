@@ -15,13 +15,16 @@ type MgmtServer struct {
 	handlers []Handler
 }
 
-func NewMgmtServer(handlers []Handler) (*MgmtServer, error) {
+func NewMgmtServer(catchall Handler, handlers []Handler) (*MgmtServer, error) {
 	m := mux.NewRouter()
 
 	// Let all the handlers register their routes
+	api := m.PathPrefix("/api").Subrouter()
 	for _, h := range handlers {
-		h.RegisterRoutes(m)
+		h.RegisterRoutes(api)
 	}
+
+	catchall.RegisterRoutes(m)
 
 	return &MgmtServer{m, handlers}, nil
 }

@@ -1,0 +1,16 @@
+<h1 ng-if="isNew">Create a new web hook</h1>
+<h1 ng-if="!isNew">Webhook <small>{{hook.id}}</small></h1>
+<div>
+<form>
+  <div class="form-group">
+    <label for="url">Endpoint url <small>(where do you want us to send events?)</small></label>
+    <input type="url" class="form-control" id="url" placeholder="http://youserver/api/webhook_handler" ng-model="hook.url">
+  </div>
+  <div class="form-group">
+    <label for="rate">Maximum rate per minute</label>
+    <input type="number" class="form-control" id="rate" placeholder="600" ng-model="hook.rate">
+  </div>
+  <button type="submit" class="btn btn-default">Cancel</button>
+  <button type="submit" class="btn btn-primary" ng-click="save()">Save</button>
+</form>
+</div>

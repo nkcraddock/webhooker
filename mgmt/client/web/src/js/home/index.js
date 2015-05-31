@@ -18,9 +18,25 @@
           }
         });
     })
-    .controller('HomeCtrl', function($scope) {
-      console.log("fuck");
+    .controller('HomeCtrl', function($scope, Restangular) {
+      var hooks = Restangular.all('hooks');
 
+      var refresh = function() {
+        hooks.getList().then(function(hooks) {
+          $scope.hooks = hooks;
+        });
+      };
+
+      refresh();
+
+      $scope.addhook = function() {
+        var newhook = {
+          url: "hehe",
+          rate: 100
+        };
+        hooks.post(newhook).then(refresh);
+        
+      };
     });
 
 

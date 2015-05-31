@@ -15,13 +15,10 @@
               templateUrl: "layout/navbar.html",
               controller: 'NavCtrl'
             },
-            'footer': {
-              templateUrl: "layout/footer.html"
-            }
           }
         });
     })
-    .controller('NavCtrl', function($scope) {
+    .controller('NavCtrl', function($scope, $rootScope) {
     });
 
 

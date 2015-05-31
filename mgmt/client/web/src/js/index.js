@@ -11,5 +11,6 @@
   // Load modules
   require('./layout');
   require('./home');
+  require('./hook');
   
 })();

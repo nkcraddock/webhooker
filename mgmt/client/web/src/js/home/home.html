@@ -1,3 +1,17 @@
-<div class="container">
-  <h1>Webhooker Management Interface</h1>
+
+<div>
+  <h1>Hooks</h1>
+</div>
+
+<div>
+  <div ui-sref="app.hook.view({hook: hook.id})" ng-repeat="hook in hooks" class="row clicky">
+    <div class="col-md-1">
+      <span class="label label-success">Active</span>
+    </div>
+
+    <div class="col-md-8">
+      <i class="fa fa-inbox"></i>
+      {{hook.url}}
+    </div>
+  </div>
 </div>
