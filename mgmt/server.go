@@ -7,7 +7,7 @@ import (
 )
 
 type Handler interface {
-	RegisterRoutes(r *mux.Route)
+	RegisterRoutes(r *mux.Router)
 }
 
 type MgmtServer struct {
@@ -20,7 +20,7 @@ func NewMgmtServer(handlers []Handler) (*MgmtServer, error) {
 
 	// Let all the handlers register their routes
 	for _, h := range handlers {
-		h.RegisterRoutes(m.PathPrefix("/api"))
+		h.RegisterRoutes(m.PathPrefix("/api").Subrouter())
 	}
 
 	return &MgmtServer{m, handlers}, nil

@@ -1,0 +1,18 @@
+{
+  "h1": {
+    "url": "http://localhost:9999",
+    "rate": 10
+  },
+  "h2": {
+    "url": "http://localhost:9999",
+    "rate": 20
+  },
+  "h3": {
+    "url": "http://localhost:9999",
+    "rate": 30
+  },
+  "h4": {
+    "url": "http://localhost:9999",
+    "rate": 60
+  }
+}
