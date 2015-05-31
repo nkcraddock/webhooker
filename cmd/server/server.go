@@ -1,13 +1,11 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
-	"github.com/emicklei/go-restful/swagger"
-
-	"github.com/emicklei/go-restful"
-
 	"github.com/nkcraddock/webhooker/domain"
+	"github.com/nkcraddock/webhooker/mgmt"
 )
 
 var (
@@ -19,18 +17,13 @@ func init() {
 	cfg = loadConfig()
 }
 
-func init_swagger(container *restful.Container) {
-	swag := swagger.Config{
-		WebServices: container.RegisteredWebServices(),
-		ApiPath:     "/api/docs.json",
+func main() {
+	handlers := make([]mgmt.Handler, 0)
+	server, err := mgmt.NewMgmtServer(handlers)
+
+	if err != nil {
+		log.Println(err)
 	}
 
-	swagger.RegisterSwaggerService(swag, container)
-}
-
-func main() {
-	container := restful.NewContainer()
-
-	init_swagger(container)
-	http.ListenAndServe(cfg.HostUrl, container)
+	http.ListenAndServe(cfg.HostUrl, server)
 }
