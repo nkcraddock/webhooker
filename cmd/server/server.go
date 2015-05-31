@@ -4,8 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/nkcraddock/webhooker/webhooks"
 	"github.com/nkcraddock/webhooker/mgmt"
+	"github.com/nkcraddock/webhooker/mgmt/client"
+	"github.com/nkcraddock/webhooker/webhooks"
 )
 
 var (
@@ -18,12 +19,24 @@ func init() {
 }
 
 func main() {
-	handlers := make([]mgmt.Handler, 0)
+	var locator client.ResourceLocator
+
+	if cfg.ClientRoot == "" {
+		locator = &client.BinDataLocator{}
+	} else {
+		locator = &client.FsLocator{cfg.ClientRoot}
+	}
+
+	clienthandler := client.NewHandler(locator)
+
+	handlers := []mgmt.Handler{clienthandler}
+
 	server, err := mgmt.NewMgmtServer(handlers)
 
 	if err != nil {
 		log.Println(err)
 	}
 
+	log.Println("Listening on", cfg.HostUrl)
 	http.ListenAndServe(cfg.HostUrl, server)
 }

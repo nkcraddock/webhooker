@@ -1,6 +1,7 @@
 VENDOR=$(CURDIR)/_vendor
 GOPATH=$(VENDOR):$(realpath ../../../..)
 SERVER_FILES := $(shell find cmd/server -type f -name "*.go" ! -name "*_test.go")
+MGMTCLIENT=$(CURDIR)/mgmt/client
 
 default: build test
 
@@ -20,12 +21,25 @@ vendor:
 
 run:
 	cd $(CURDIR)
-	go run $(SERVER_FILES)
+	go run $(SERVER_FILES) -c mgmt/client/web/build/
 
 build: vendor clean
 	mkdir -p ./build/
-	CGO_ENABLED=0 go build -a -installsuffix cgo -o build/mervis --ldflags '-s' $(SERVER_FILES)
+	CGO_ENABLED=0 go build -a -installsuffix cgo -o build/mgmt-service --ldflags '-s' $(SERVER_FILES)
 
 test: 
 	go test -v ./...
 
+mgmt-client-deps:
+	if [ ! -d "$(MGMTCLIENT)/web/node_modules" ]; then \
+		cd $(MGMTCLIENT)/web; \
+		npm install; \
+		bower install; \
+		fi;
+
+mgmt-client: mgmt-client-deps
+	GOPATH=$(VENDOR)
+	mkdir -p $(VENDOR)
+	go get github.com/jteeuwen/go-bindata/...
+	grunt --gruntfile $(MGMTCLIENT)/web/Gruntfile.js package
+	$(VENDOR)/bin/go-bindata -o "$(MGMTCLIENT)/resources.go" -pkg="client" -prefix="$(MGMTCLIENT)/web/build/" $(MGMTCLIENT)/web/build/...
