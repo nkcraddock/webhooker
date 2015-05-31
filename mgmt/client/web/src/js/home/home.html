@@ -4,14 +4,15 @@
 </div>
 
 <div>
-  <div ui-sref="app.hook.view({hook: hook.id})" ng-repeat="hook in hooks" class="row clicky">
-    <div class="col-md-1">
-      <span class="label label-success">Active</span>
-    </div>
-
-    <div class="col-md-8">
-      <i class="fa fa-inbox"></i>
+  <div ng-repeat="hook in hooks" class="row clicky">
+    <div ui-sref="app.hook.view({hook: hook.id})" class="col-md-6">
       {{hook.url}}
+    </div>
+    <div ui-sref="app.hook.view({hook: hook.id})" class="col-md-2">
+      {{hook.rate}}
+    </div>
+    <div class="col-md-2 col-md-offset-2">
+      <button class="btn btn-default" ng-click="delhook(hook.id)">delete</button>
     </div>
   </div>
 </div>

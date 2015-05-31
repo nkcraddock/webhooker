@@ -35,7 +35,10 @@
           rate: 100
         };
         hooks.post(newhook).then(refresh);
-        
+      };
+
+      $scope.delhook = function(hook) {
+        Restangular.one('hooks', hook).remove().then(refresh);
       };
     });
 
