@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/nkcraddock/webhooker/domain"
+	"github.com/nkcraddock/webhooker/webhooks"
 	"github.com/nkcraddock/webhooker/mgmt"
 )
 
 var (
 	cfg   config
-	hooks domain.Store
+	hooks webhooks.Store
 )
 
 func init() {

@@ -6,15 +6,15 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/nkcraddock/webhooker/domain"
+	"github.com/nkcraddock/webhooker/webhooks"
 )
 
 type hooks struct {
-	store domain.Store
-	loc   func(h *domain.Hook) string
+	store webhooks.Store
+	loc   func(h *webhooks.Hook) string
 }
 
-func NewHooksHandler(store domain.Store) Handler {
+func NewHooksHandler(store webhooks.Store) Handler {
 	return &hooks{
 		store: store,
 	}
@@ -24,7 +24,7 @@ func (h *hooks) RegisterRoutes(r *mux.Router) {
 	get := r.HandleFunc("/hooks/{hook}", h.get).Methods("GET")
 	// passing the route into this closure so we can use it later
 	// to get resource URLs
-	h.loc = func(h *domain.Hook) string {
+	h.loc = func(h *webhooks.Hook) string {
 		url, _ := get.URL("hook", h.Id)
 		return url.String()
 	}
@@ -49,7 +49,7 @@ func (h *hooks) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *hooks) save(w http.ResponseWriter, r *http.Request) {
-	hook := domain.NewHook("", 0)
+	hook := webhooks.NewHook("", 0)
 	body, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 	json.Unmarshal(body, hook)

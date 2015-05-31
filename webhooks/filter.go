@@ -1,4 +1,4 @@
-package domain
+package webhooks
 
 type Filter struct {
 	Id   string `json:"id"`

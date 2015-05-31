@@ -6,7 +6,7 @@ import (
 	"gopkg.in/redis.v3"
 
 	"github.com/nkcraddock/webhooker/db"
-	"github.com/nkcraddock/webhooker/domain"
+	"github.com/nkcraddock/webhooker/webhooks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -17,10 +17,10 @@ func TestServer(t *testing.T) {
 }
 
 var _ = Describe("RedisHookerStore integration tests", func() {
-	var store domain.Store
+	var store webhooks.Store
 	var client *redis.Client
-	var testhook *domain.Hook
-	var testfilter *domain.Filter
+	var testhook *webhooks.Hook
+	var testfilter *webhooks.Filter
 
 	BeforeEach(func() {
 		client = redis.NewClient(&redis.Options{
@@ -35,7 +35,7 @@ var _ = Describe("RedisHookerStore integration tests", func() {
 			return client
 		})
 
-		testhook = domain.NewHook("url", 100)
+		testhook = webhooks.NewHook("url", 100)
 		testfilter = testhook.NewFilter("testfilter", "evt", "key")
 	})
 
@@ -80,8 +80,8 @@ var _ = Describe("RedisHookerStore integration tests", func() {
 
 	Context("GetHooks", func() {
 		It("lists all hooks", func() {
-			one := domain.NewHook("one", 1)
-			two := domain.NewHook("two", 2)
+			one := webhooks.NewHook("one", 1)
+			two := webhooks.NewHook("two", 2)
 			store.SaveHook(one)
 			store.SaveHook(two)
 
@@ -102,12 +102,12 @@ var _ = Describe("RedisHookerStore integration tests", func() {
 
 	Context("GetFilters", func() {
 		It("returns the filters for a given hook id", func() {
-			hookOne := domain.NewHook("one", 1)
+			hookOne := webhooks.NewHook("one", 1)
 			filterOne := hookOne.NewFilter("fone", "evt", "key")
 			store.SaveHook(hookOne)
 			store.SaveFilter(filterOne)
 
-			hookTwo := domain.NewHook("two", 2)
+			hookTwo := webhooks.NewHook("two", 2)
 			filterTwo := hookTwo.NewFilter("ftwo", "evt", "key")
 			store.SaveHook(hookTwo)
 			store.SaveFilter(filterTwo)

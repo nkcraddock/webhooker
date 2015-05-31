@@ -1,4 +1,4 @@
-package domain
+package webhooks
 
 type Store interface {
 	SaveHook(h *Hook) error

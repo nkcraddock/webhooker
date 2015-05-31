@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/nkcraddock/webhooker/db"
-	"github.com/nkcraddock/webhooker/domain"
+	"github.com/nkcraddock/webhooker/webhooks"
 	"github.com/nkcraddock/webhooker/mgmt"
 	"github.com/nkcraddock/webhooker/testhelp"
 	. "github.com/onsi/ginkgo"
@@ -16,7 +16,7 @@ import (
 
 var _ = Describe("hooks handler tests", func() {
 	var s *testhelp.TestServer
-	var store domain.Store
+	var store webhooks.Store
 	var client *redis.Client
 	regex_guid := `[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}`
 	testdata, _ := testhelp.LoadTestData("testdata/integration-tests.json")
@@ -59,7 +59,7 @@ var _ = Describe("hooks handler tests", func() {
 		})
 
 		It("returns the new hook", func() {
-			hook := new(domain.Hook)
+			hook := new(webhooks.Hook)
 			s.POST("/hooks", testdata["h1"], hook)
 			Ω(hook.Id).Should(MatchRegexp(regex_guid))
 		})
@@ -70,17 +70,17 @@ var _ = Describe("hooks handler tests", func() {
 			s.POST("/hooks", testdata["h1"], nil)
 			s.POST("/hooks", testdata["h2"], nil)
 
-			var hooks []*domain.Hook
+			var hooks []*webhooks.Hook
 			res := s.GET("/hooks", &hooks)
 			Ω(res.Code).Should(Equal(http.StatusOK))
 			Ω(hooks).Should(HaveLen(2))
 		})
 
 		It("gets an individual hook", func() {
-			savedhook := new(domain.Hook)
+			savedhook := new(webhooks.Hook)
 			s.POST("/hooks", testdata["h1"], savedhook)
 
-			hook := new(domain.Hook)
+			hook := new(webhooks.Hook)
 			res := s.GET("/hooks/"+savedhook.Id, hook)
 			Ω(res.Code).Should(Equal(http.StatusOK))
 			Ω(hook.RatePerMinute).Should(Equal(savedhook.RatePerMinute))
