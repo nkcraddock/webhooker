@@ -8,12 +8,13 @@ clean:
 vendor:
 	GOPATH=$(VENDOR)
 	mkdir -p $(VENDOR)
-	go get gopkg.in/mgo.v2
-	go get github.com/justinas/alice
-	go get github.com/michaelklishin/rabbit-hole
-	go get github.com/emicklei/go-restful
-	go get github.com/emicklei/go-restful/swagger
-	go get github.com/nu7hatch/gouuid
+	go get -d github.com/onsi/ginkgo
+	go get -d github.com/onsi/gomega
+	go get -d github.com/michaelklishin/rabbit-hole
+	go get -d github.com/emicklei/go-restful
+	go get -d github.com/emicklei/go-restful/swagger
+	go get -d github.com/nu7hatch/gouuid
+	go get -d gopkg.in/redis.v3
 	find $(VENDOR) -type d -name '.git' | xargs rm -rf
 
 debug: vendor
@@ -23,7 +24,7 @@ build: vendor clean
 	mkdir -p ./build/
 	go build -o ./build/server cmd/server/*.go  
 
-test: vendor
+test: 
 	go test -v ./...
 
 reset-rabbit:
