@@ -91,13 +91,35 @@ func (r *RabbitStore) SaveFilter(f *webhooks.Filter) error {
 	}
 
 	topic := getTopicFilter(f)
-	if prop, err := r.bindExchange(sourceExchange, hook.Id, topic, nil); err != nil {
+	args := map[string]interface{}{
+		"FilterId": f.Id,
+	}
+
+	if prop, err := r.bindExchange(sourceExchange, hook.Id, topic, args); err != nil {
 		return err
 	} else {
+		// Store the properties key. We need it later to delete this thing.
 		f.RmqProps = prop
 	}
 
 	return nil
+}
+
+func (r *RabbitStore) GetFilter(hook, id string) (*webhooks.Filter, error) {
+	bs, err := r.rb.ListBindingsIn(r.vh)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, b := range bs {
+		if filterId, ok := b.Arguments["FilterId"]; ok {
+			if fid, ok := filterId.(string); ok {
+				return &webhooks.Filter{Id: fid}, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("Not found")
 }
 
 func (r *RabbitStore) GetFilters(hook string) ([]*webhooks.Filter, error) {

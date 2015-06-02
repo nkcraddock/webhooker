@@ -19,9 +19,12 @@ vendor:
 	go get -d gopkg.in/redis.v3
 	find $(VENDOR) -type d -name '.git' | xargs rm -rf
 
-run:
+run-server:
 	cd $(CURDIR)
 	go run $(SERVER_FILES) -c mgmt/client/web/build/
+
+run:
+	go run cmd/dolomite/*.go
 
 build: vendor clean
 	mkdir -p ./build/
