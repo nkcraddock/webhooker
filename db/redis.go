@@ -57,6 +57,16 @@ func (s *redisStore) GetHooks(query string) ([]*webhooks.Hook, error) {
 	return hooks, nil
 }
 
+func (s *redisStore) GetFilter(hook, id string) (*webhooks.Filter, error) {
+	col := filterColKey(hook)
+	f := new(webhooks.Filter)
+	if err := s.get(col, id, f); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
 func (s *redisStore) GetFilters(hook string) ([]*webhooks.Filter, error) {
 	col := filterColKey(hook)
 	results, err := s.list(col)

@@ -33,13 +33,34 @@
     })
     .controller('HookDetailCtrl', function($scope, $stateParams, Restangular) {
       var hook = Restangular.one('hooks', $stateParams.hook);
+      var filters = hook.all('filters');
+
+      var refreshFilters = function() {
+        filters.getList().then(function(f) {
+          $scope.filters = Restangular.stripRestangular(f);
+        });
+      };
 
       hook.get().then(function(h) {
-        $scope.hook = h;
+        $scope.hook = Restangular.stripRestangular(h);
       });
+
+      refreshFilters();
 
       $scope.save = function() {
         $scope.hook.save();
+      };
+
+      $scope.addFilter = function() {
+        var f = {
+          "src": "test source",
+          "evt": "something happened event",
+          "key": "3"
+        };
+
+        filters.post(f).then(function(newfilter) {
+          refreshFilters();
+        });
       };
     })
     .controller('NewHookCtrl', function($scope, $state, Restangular) {

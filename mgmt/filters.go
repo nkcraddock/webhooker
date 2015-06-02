@@ -24,7 +24,7 @@ func NewFiltersHandler(store webhooks.Store) Handler {
 
 // wire my routes up to the mux router
 func (h *filtersHandler) RegisterRoutes(r *mux.Router) {
-	get := r.HandleFunc("/hooks/{hook}/filters/{filter}", h.list).Methods("GET")
+	get := r.HandleFunc("/hooks/{hook}/filters/{filter}", h.get).Methods("GET")
 	// passing the route into this closure so we can use it later
 	// to get resource URLs
 	h.loc = func(f *webhooks.Filter) string {
@@ -34,6 +34,20 @@ func (h *filtersHandler) RegisterRoutes(r *mux.Router) {
 
 	r.HandleFunc("/hooks/{hook}/filters", h.list).Methods("GET")
 	r.HandleFunc("/hooks/{hook}/filters", h.save).Methods("POST")
+}
+
+func (h *filtersHandler) get(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	hookId := vars["hook"]
+	filterId := vars["filter"]
+
+	filter, err := h.store.GetFilter(hookId, filterId)
+	if err != nil {
+		respondErrorCode(w, http.StatusNotFound)
+		return
+	}
+
+	respondJson(w, http.StatusOK, filter)
 }
 
 func (h *filtersHandler) list(w http.ResponseWriter, r *http.Request) {

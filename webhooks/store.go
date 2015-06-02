@@ -6,5 +6,6 @@ type Store interface {
 	GetHooks(query string) ([]*Hook, error)
 	SaveFilter(f *Filter) error
 	GetFilters(hook string) ([]*Filter, error)
+	GetFilter(hook, id string) (*Filter, error)
 	DeleteFilter(hook, id string) error
 }

@@ -47,8 +47,9 @@ func main() {
 	store := initRedisStore()
 	clientHandler := initClientHandler()
 	hookHandler := mgmt.NewHooksHandler(store)
+	filterHandler := mgmt.NewFiltersHandler(store)
 
-	handlers := []mgmt.Handler{hookHandler}
+	handlers := []mgmt.Handler{hookHandler, filterHandler}
 
 	server, err := mgmt.NewMgmtServer(clientHandler, handlers)
 
