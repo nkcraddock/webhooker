@@ -31,7 +31,7 @@ build: vendor clean
 	CGO_ENABLED=0 go build -a -installsuffix cgo -o build/mgmt-service --ldflags '-s' $(SERVER_FILES)
 
 test: 
-	go test -v ./...
+	go test -v -cover ./...
 
 mgmt-client-deps:
 	if [ ! -d "$(MGMTCLIENT)/web/node_modules" ]; then \
