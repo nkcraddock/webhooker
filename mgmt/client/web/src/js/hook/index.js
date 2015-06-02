@@ -43,6 +43,10 @@
 
       hook.get().then(function(h) {
         $scope.hook = Restangular.stripRestangular(h);
+
+        $scope.filter = {
+          "hook": $scope.hook.id
+        };
       });
 
       refreshFilters();
@@ -51,15 +55,12 @@
         $scope.hook.save();
       };
 
-      $scope.addFilter = function() {
-        var f = {
-          "src": "test source",
-          "evt": "something happened event",
-          "key": "3"
-        };
 
-        filters.post(f).then(function(newfilter) {
+      $scope.addFilter = function() {
+        console.log($scope.filter);
+        filters.post($scope.filter).then(function(newfilter) {
           refreshFilters();
+          $scope.newFilter = {"hook": $scope.hook.id};
         });
       };
     })
