@@ -93,6 +93,7 @@ func (r *RabbitStore) SaveFilter(f *webhooks.Filter) error {
 	topic := getTopicFilter(f)
 	args := map[string]interface{}{
 		"FilterId": f.Id,
+		"HookId":   hook.Id,
 	}
 
 	if prop, err := r.bindExchange(sourceExchange, hook.Id, topic, args); err != nil {
@@ -112,9 +113,13 @@ func (r *RabbitStore) GetFilter(hook, id string) (*webhooks.Filter, error) {
 	}
 
 	for _, b := range bs {
-		if filterId, ok := b.Arguments["FilterId"]; ok {
-			if fid, ok := filterId.(string); ok {
-				return &webhooks.Filter{Id: fid}, nil
+		if hookId, ok := b.Arguments["HookId"]; ok {
+			if hid, ok := hookId.(string); ok && hid == hook {
+				if filterId, ok := b.Arguments["FilterId"]; ok {
+					if fid, ok := filterId.(string); ok && fid == id {
+						return &webhooks.Filter{Id: fid, Hook: hid}, nil
+					}
+				}
 			}
 		}
 	}
@@ -128,10 +133,16 @@ func (r *RabbitStore) GetFilters(hook string) ([]*webhooks.Filter, error) {
 		return nil, err
 	}
 
-	filters := make([]*webhooks.Filter, len(bs))
-	for ix, b := range bs {
-		filters[ix] = &webhooks.Filter{
-			Id: b.PropertiesKey,
+	filters := make([]*webhooks.Filter, 0)
+	for _, b := range bs {
+		if hookId, ok := b.Arguments["HookId"]; ok {
+			if hid, ok := hookId.(string); ok {
+				if filterId, ok := b.Arguments["FilterId"]; ok {
+					if fid, ok := filterId.(string); ok {
+						filters = append(filters, &webhooks.Filter{Id: fid, Hook: hid})
+					}
+				}
+			}
 		}
 	}
 

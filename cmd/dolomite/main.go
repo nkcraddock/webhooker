@@ -25,7 +25,7 @@ func main() {
 	// Remove unknown hooks from rabbit
 	for _, h := range rabbitHooks {
 		if _, err := red.GetHook(h.Id); err != nil {
-			log.Println("DELETE", h.Id)
+			log.Println("DELETE", h.Id, err)
 		}
 	}
 
@@ -54,7 +54,7 @@ func main() {
 
 		// Add missing filters to rabbit
 		for _, f := range redisFilters {
-			if _, err := rab.GetFilter(h.Id, f.Id); err != nil {
+			if fil, err := rab.GetFilter(h.Id, f.Id); err != nil || fil == nil {
 				rab.SaveFilter(f)
 				red.SaveFilter(f) // update redis so it gets the RabbitMQ PropsKey
 				log.Println("ADD FILTER", f.Id)
