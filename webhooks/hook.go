@@ -1,34 +1,36 @@
 package webhooks
 
-import "github.com/nu7hatch/gouuid"
+// Used for evil.
+type omit *struct{}
 
 type Hook struct {
-	Id            string `json:"id,omitifempty"`
+	Id            string `json:"id,omitempty"`
 	CallbackUrl   string `json:"url"`
-	Secret        string `json:"secret"`
+	Secret        string `json:"secret,omitempty"`
 	RatePerMinute int    `json:"rate"`
+}
+
+func (h *Hook) Sanitize() interface{} {
+	return sanitizedHook{Hook: h}
+}
+
+type sanitizedHook struct {
+	*Hook
+	Secret omit `json:"secret,omitempty"`
 }
 
 func NewHook(url string, rate int) *Hook {
 	return &Hook{
-		Id:            getId(),
 		CallbackUrl:   url,
-		Secret:        getId(),
 		RatePerMinute: rate,
 	}
 }
 
 func (h *Hook) NewFilter(src, evt, key string) *Filter {
 	return &Filter{
-		Id:   getId(),
 		Src:  src,
 		Evt:  evt,
 		Key:  key,
 		Hook: h.Id,
 	}
-}
-
-func getId() string {
-	id, _ := uuid.NewV4()
-	return id.String()
 }

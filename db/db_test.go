@@ -103,13 +103,13 @@ var _ = Describe("RedisHookerStore integration tests", func() {
 	Context("GetFilters", func() {
 		It("returns the filters for a given hook id", func() {
 			hookOne := webhooks.NewHook("one", 1)
-			filterOne := hookOne.NewFilter("fone", "evt", "key")
 			store.SaveHook(hookOne)
+			filterOne := hookOne.NewFilter("fone", "evt", "key")
 			store.SaveFilter(filterOne)
 
 			hookTwo := webhooks.NewHook("two", 2)
-			filterTwo := hookTwo.NewFilter("ftwo", "evt", "key")
 			store.SaveHook(hookTwo)
+			filterTwo := hookTwo.NewFilter("ftwo", "evt", "key")
 			store.SaveFilter(filterTwo)
 
 			filters, err := store.GetFilters(hookOne.Id)

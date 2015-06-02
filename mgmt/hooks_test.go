@@ -7,14 +7,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/nkcraddock/webhooker/db"
-	"github.com/nkcraddock/webhooker/webhooks"
 	"github.com/nkcraddock/webhooker/mgmt"
 	"github.com/nkcraddock/webhooker/testhelp"
+	"github.com/nkcraddock/webhooker/webhooks"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("hooks handler tests", func() {
+var _ = Describe("hooksHandler handler tests", func() {
 	var s *testhelp.TestServer
 	var store webhooks.Store
 	var client *redis.Client
@@ -62,10 +62,12 @@ var _ = Describe("hooks handler tests", func() {
 			hook := new(webhooks.Hook)
 			s.POST("/hooks", testdata["h1"], hook)
 			Ω(hook.Id).Should(MatchRegexp(regex_guid))
+			Ω(hook.CallbackUrl).Should(Equal(testdata["h1"]["url"]))
 		})
+
 	})
 
-	Context("GET", func() {
+	Context("GET /hooks", func() {
 		It("gets a list of all hooks", func() {
 			s.POST("/hooks", testdata["h1"], nil)
 			s.POST("/hooks", testdata["h2"], nil)
@@ -76,14 +78,39 @@ var _ = Describe("hooks handler tests", func() {
 			Ω(hooks).Should(HaveLen(2))
 		})
 
+		It("doesnt return the secrets", func() {
+			s.POST("/hooks", testdata["h1"], nil)
+			s.POST("/hooks", testdata["h2"], nil)
+
+			var hooks []map[string]interface{}
+			s.GET("/hooks", &hooks)
+
+			for _, h := range hooks {
+				Ω(h).ShouldNot(HaveKey("secret"))
+			}
+		})
+	})
+
+	Context("GET /hooks/:id", func() {
 		It("gets an individual hook", func() {
 			savedhook := new(webhooks.Hook)
 			s.POST("/hooks", testdata["h1"], savedhook)
 
 			hook := new(webhooks.Hook)
 			res := s.GET("/hooks/"+savedhook.Id, hook)
+
 			Ω(res.Code).Should(Equal(http.StatusOK))
+			Ω(hook.Id).Should(Equal(savedhook.Id))
 			Ω(hook.RatePerMinute).Should(Equal(savedhook.RatePerMinute))
+		})
+
+		It("doesnt return the secret", func() {
+			savedhook := new(webhooks.Hook)
+			s.POST("/hooks", testdata["h1"], savedhook)
+
+			var hook map[string]interface{}
+			s.GET("/hooks/"+savedhook.Id, &hook)
+			Ω(hook).ShouldNot(HaveKey("secret"))
 		})
 	})
 })

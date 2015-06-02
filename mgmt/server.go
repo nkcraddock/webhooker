@@ -24,6 +24,7 @@ func NewMgmtServer(catchall Handler, handlers []Handler) (*MgmtServer, error) {
 		h.RegisterRoutes(api)
 	}
 
+	// wire up the catchall route to the main router
 	catchall.RegisterRoutes(m)
 
 	return &MgmtServer{m, handlers}, nil

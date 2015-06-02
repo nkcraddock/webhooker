@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nkcraddock/webhooker/webhooks"
+	"github.com/nu7hatch/gouuid"
 	"gopkg.in/redis.v3"
 )
 
@@ -19,6 +20,10 @@ func RedisHookerStore(clientProvider func() *redis.Client) webhooks.Store {
 }
 
 func (s *redisStore) SaveHook(h *webhooks.Hook) error {
+	// If its a new hook, generate the ID
+	if h.Id == "" {
+		h.Id = getId()
+	}
 	return s.save("hooks", h.Id, h)
 }
 
@@ -76,6 +81,10 @@ func (s *redisStore) GetFilters(hook string) ([]*webhooks.Filter, error) {
 }
 
 func (s *redisStore) SaveFilter(f *webhooks.Filter) error {
+	if f.Id == "" {
+		f.Id = getId()
+	}
+
 	col := filterColKey(f.Hook)
 	return s.save(col, f.Id, f)
 }
@@ -116,4 +125,9 @@ func (s *redisStore) push(col, val string) error {
 
 func filterColKey(hook string) string {
 	return fmt.Sprintf("hook:%s:filters", hook)
+}
+
+func getId() string {
+	id, _ := uuid.NewV4()
+	return id.String()
 }

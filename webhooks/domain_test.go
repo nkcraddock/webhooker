@@ -15,10 +15,10 @@ func TestServer(t *testing.T) {
 
 var _ = Describe("Domain unit tests", func() {
 	Context("NewHook", func() {
-		It("should initialize an Id and Secret", func() {
+		It("should set the url and rate", func() {
 			hook := webhooks.NewHook("url", 5)
-			Ω(hook.Id).ShouldNot(Equal(""))
-			Ω(hook.Secret).ShouldNot(Equal(""))
+			Ω(hook.CallbackUrl).Should(Equal("url"))
+			Ω(hook.RatePerMinute).Should(Equal(5))
 		})
 	})
 
