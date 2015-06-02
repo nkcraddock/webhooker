@@ -8,5 +8,15 @@
     "url": "http://localhost:9999",
     "rate": 20,
     "secret": "h2secret"
+  },
+  "f1": {
+    "src": "source",
+    "evt": "event",
+    "key": "one"
+  },
+  "f2": {
+    "src": "source",
+    "evt": "event",
+    "key": "two"
   }
 }

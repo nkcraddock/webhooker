@@ -40,8 +40,7 @@ func (h *hooksHandler) get(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	hook, err := h.store.GetHook(vars["hook"])
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Not found"))
+		respondErrorCode(w, http.StatusNotFound)
 	}
 
 	writeEntity(w, hook.Sanitize())
